@@ -8,7 +8,7 @@
     "prepare": "husky",
     "check:frontend": "pnpm --filter web lint",
     "build:frontend": "pnpm --filter web build",
-    "build:contracts": "cd contracts && cargo build --target wasm32-unknown-unknown --release"
+    "build:contracts": "cd contracts/stellarproof && stellar contract build"
   },
   "lint-staged": {
     "frontend/**/*.{ts,tsx}": [

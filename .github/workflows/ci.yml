@@ -40,4 +40,6 @@ jobs:
       run: pnpm build:frontend
 
     - name: Build Smart Contracts
-      run: pnpm build:contracts
+      run: |
+        cd contracts/stellarproof
+        cargo build --target wasm32-unknown-unknown --release
