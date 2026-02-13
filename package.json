@@ -1,0 +1,26 @@
+{
+  "name": "stellarproof",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "check:frontend": "pnpm --filter web lint",
+    "build:frontend": "pnpm --filter web build",
+    "build:contracts": "cd contracts && cargo build --target wasm32-unknown-unknown --release"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx}": [
+      "pnpm --filter web exec eslint --fix"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.2",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  }
+}

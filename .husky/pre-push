@@ -1,0 +1,2 @@
+pnpm build:frontend
+pnpm build:contracts
