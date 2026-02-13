@@ -96,36 +96,35 @@ StellarProof/
 ├── package.json
 ├── .env.example
 │
-├── apps/
-│   ├── frontend/              # Next.js frontend + API routes
-│   │   ├── app/
-│   │   │   ├── api/
-│   │   │   │   └── health/
-│   │   │   │       └── route.ts
-│   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx
-│   │   │   └── creator/
-│   │   │       └── upload-content/
-│   │   │           └── page.tsx
-│   │   ├── components/
-│   │   └── styles/
-│   │
-│   └── oracle-worker/         # TEE orchestration worker
-│       ├── src/
-│       │   ├── teeExecutor.ts
-│       │   ├── attestationService.ts
-│       │   └── verificationPipeline.ts
+├── frontend/              # Next.js frontend + API routes
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── health/
+│   │   │       └── route.ts
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── creator/
+│   │       └── upload-content/
+│   │           └── page.tsx
+│   ├── components/
+│   └── styles/
+│
+├── oracle-worker/         # TEE orchestration worker
+│   ├── src/
+│   │   ├── teeExecutor.ts
+│   │   ├── attestationService.ts
+│   │   └── verificationPipeline.ts
 │
 ├── services/
-│   ├── storage/               # IPFS / MongoDB management
-│   ├── kms/                   # Encryption & key management
-│   ├── stellar/               # Stellar SDK integration
-│   └── verification/          # Verification orchestration
+│   ├── storage/             # IPFS / MongoDB management
+│   ├── kms/                 # Encryption & key management
+│   ├── stellar/             # Stellar SDK integration
+│   └── verification/        # Verification orchestration
 │
 ├── contracts/
-│   ├── oracle/                # Verification request contract
-│   ├── provenance/            # Certificate minting contract
-│   └── registry/              # Trusted TEE registry
+│   ├── oracle/              # Verification request contract
+│   ├── provenance/          # Certificate minting contract
+│   └── registry/            # Trusted TEE registry
 │
 ├── packages/
 │   ├── ui/
@@ -241,7 +240,8 @@ Each attestation includes:
 ### Prerequisites
 *   Node.js 18+
 *   Rust (latest stable)
-*   Soroban CLI
+*   Cargo
+*   Use Stellar CLI for Soroban commands (Recommended)
 *   pnpm
 *   Stellar wallet (Freighter recommended)
 
@@ -256,13 +256,13 @@ Each attestation includes:
 
 2.  **Run Frontend**
     ```bash
-    cd apps/web
+    cd frontend
     pnpm dev
     ```
 
 3.  **Run Oracle Worker**
     ```bash
-    cd apps/oracle-worker
+    cd oracle-worker
     pnpm dev
     ```
 
@@ -270,6 +270,10 @@ Each attestation includes:
     ```bash
     cd contracts
     cargo build --target wasm32-unknown-unknown --release
+    OR
+    stellar contract build
+    OR
+    Soroban contract build
     ```
 
 ### 🧪 Testing
@@ -311,6 +315,7 @@ Each attestation includes:
 *   **Legal Audit Trails**: Create immutable chains of custody for evidence.
 *   **Media Authenticity Platforms**: Power social media fact-checking.
 *   **Supply Chain Media Verification**: Verify photos of goods at different transit points.
+*   **Prediction Market Resolution**: Use verified media as trustless oracles to resolve market outcomes (e.g., sports results, weather events).
 
 ---
 
