@@ -1,4 +1,6 @@
 import Header from "@/components/Header";
+import HowItWorks from "@/components/HowItWorks";
+
 
 export default function Home() {
   return (
@@ -31,6 +33,11 @@ export default function Home() {
             </p>
           </div>
         </section>
+
+        <section id="how-it-works" className="scroll-mt-16" aria-label="How It Works">
+          <HowItWorks />
+        </section>
+
         <section
           id="creator"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
