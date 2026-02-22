@@ -21,7 +21,7 @@ const steps = [
     icon: Database,
     label: "DECENTRALIZED IPFS",
     glowColor: "shadow-blue-500/50",
-    imageSrc: "/about-imgs/storage.png", 
+    imageSrc: "/about-imgs/stor.jpg", 
   },
   {
     id: 3,
