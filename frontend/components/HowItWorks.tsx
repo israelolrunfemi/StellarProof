@@ -69,7 +69,6 @@ export default function HowItWorks() {
     // Assuming the dark background from the design. Adjust if needed.
     <section className="relative py-24 bg-[#08090C] overflow-hidden font-sans">
       
-      {/* Background ambient glow effect */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-secondary/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -120,7 +119,6 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              // Using specific colors from the design screenshots
               className="bg-[#13141C] border border-white/5 rounded-2xl overflow-hidden flex flex-col hover:border-secondary/30 transition-all duration-300 group"
             >
               {/* --- Image Placeholder Div --- */}
@@ -132,12 +130,10 @@ export default function HowItWorks() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                 />
-                {/* Optional: A subtle gradient overlay to blend the bottom of the image into the card */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#13141C] via-transparent to-transparent opacity-80" />
               </div>
               
               <div className="p-6 flex flex-col flex-grow relative">
-                {/* Small glowing line above the content, color-coded per step */}
                 <div className={`absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r ${index % 2 === 0 ? 'from-secondary/50 to-purple-500/50' : 'from-primary/50 to-cyan-500/50'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                 
                 <step.icon className={`w-6 h-6 mb-4 ${index % 2 === 0 ? 'text-secondary' : 'text-primary'}`} />
@@ -150,10 +146,9 @@ export default function HowItWorks() {
 
         {/* --- Detached Timeline Tracker (Hidden on small mobile) --- */}
         <div className="hidden md:block relative w-full max-w-5xl mx-auto mb-24 px-4">
-          {/* Base inactive line */}
           <div className="absolute top-[28px] left-0 w-full h-[2px] bg-white/10" />
           
-          {/* Animated active glowing line */}
+     
           <motion.div 
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
@@ -172,18 +167,18 @@ export default function HowItWorks() {
                 transition={{ delay: 0.6 + (index * 0.15) }}
                 className="flex flex-col items-center w-1/4 relative"
               >
-                {/* Step Number Indicator */}
+                
                 <span className={`text-xs font-bold tracking-widest mb-6 ${index % 2 === 0 ? 'text-secondary' : 'text-primary'}`}>
                   STEP 0{step.id}
                 </span>
                 
-                {/* Glowing Dot Node */}
+              
                 <div className={`w-4 h-4 rounded-full ${index % 2 === 0 ? 'bg-secondary' : 'bg-primary'} shadow-[0_0_20px_currentColor] ${step.glowColor} z-10 mb-6 relative`}>
-                  {/* Inner white dot for pop */}
+                  
                   <div className="absolute inset-1 bg-white rounded-full" />
                 </div>
                 
-                {/* Bottom Label */}
+                
                 <span className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider text-center font-bold px-2">
                   {step.label}
                 </span>
@@ -201,7 +196,7 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 + (index * 0.1) }}
-              // Using the specific dark card color from the design
+              
               className="bg-[#13141C] border border-white/5 rounded-2xl p-6 flex items-start gap-5 hover:bg-[#1A1B26] hover:border-white/10 transition-all duration-300"
             >
               <div className="bg-white/5 p-3.5 rounded-xl shrink-0">
