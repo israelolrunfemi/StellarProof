@@ -43,8 +43,6 @@ const steps = [
   },
 ];
 
-
-
 // Data for the 3 bottom feature cards
 const bottomFeatures = [
   {
@@ -66,8 +64,7 @@ const bottomFeatures = [
 
 export default function HowItWorks() {
   return (
-    // Assuming the dark background from the design. Adjust if needed.
-    <section className="relative py-24 bg-[#08090C] overflow-hidden font-sans">
+    <section className="relative py-24 bg-gray-50 dark:bg-[#08090C] transition-colors duration-300 overflow-hidden font-sans">
       
       {/* Background ambient glow effect */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[600px] bg-secondary/10 blur-[120px] rounded-full pointer-events-none" />
@@ -91,7 +88,7 @@ export default function HowItWorks() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight transition-colors duration-300"
           >
             Securing Truth in a <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-secondary via-purple-400 to-secondary">
@@ -104,7 +101,7 @@ export default function HowItWorks() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: 0.1 }}
-            className="text-white/60 max-w-2xl mx-auto text-base md:text-lg leading-relaxed"
+            className="text-gray-600 dark:text-white/60 max-w-2xl mx-auto text-base md:text-lg leading-relaxed transition-colors duration-300"
           >
             Our multi-stage cryptographic pipeline ensures that every piece of media is 
             verified, secured, and immortalized with provable integrity.
@@ -120,11 +117,10 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              // Using specific colors from the design screenshots
-              className="bg-[#13141C] border border-white/5 rounded-2xl overflow-hidden flex flex-col hover:border-secondary/30 transition-all duration-300 group"
+              className="bg-white dark:bg-[#13141C] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden flex flex-col hover:border-secondary/30 transition-all duration-300 group shadow-sm dark:shadow-none"
             >
               {/* --- Image Placeholder Div --- */}
-              <div className="w-full aspect-[4/3] relative overflow-hidden bg-[#0A0B0F]">
+              <div className="w-full aspect-[4/3] relative overflow-hidden bg-gray-200 dark:bg-[#0A0B0F]">
                 <Image
                   src={step.imageSrc}
                   alt={step.title}
@@ -132,17 +128,16 @@ export default function HowItWorks() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                 />
-                {/* Optional: A subtle gradient overlay to blend the bottom of the image into the card */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#13141C] via-transparent to-transparent opacity-80" />
+                {/* Gradient overlay adapts to light/dark mode */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#13141C] via-transparent to-transparent opacity-80 transition-colors duration-300" />
               </div>
               
               <div className="p-6 flex flex-col flex-grow relative">
-                {/* Small glowing line above the content, color-coded per step */}
                 <div className={`absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r ${index % 2 === 0 ? 'from-secondary/50 to-purple-500/50' : 'from-primary/50 to-cyan-500/50'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                 
                 <step.icon className={`w-6 h-6 mb-4 ${index % 2 === 0 ? 'text-secondary' : 'text-primary'}`} />
-                <h3 className="text-white font-bold text-xl mb-2">{step.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                <h3 className="text-gray-900 dark:text-white font-bold text-xl mb-2 transition-colors duration-300">{step.title}</h3>
+                <p className="text-gray-600 dark:text-white/50 text-sm leading-relaxed transition-colors duration-300">{step.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -151,7 +146,7 @@ export default function HowItWorks() {
         {/* --- Detached Timeline Tracker (Hidden on small mobile) --- */}
         <div className="hidden md:block relative w-full max-w-5xl mx-auto mb-24 px-4">
           {/* Base inactive line */}
-          <div className="absolute top-[28px] left-0 w-full h-[2px] bg-white/10" />
+          <div className="absolute top-[28px] left-0 w-full h-[2px] bg-gray-300 dark:bg-white/10 transition-colors duration-300" />
           
           {/* Animated active glowing line */}
           <motion.div 
@@ -179,12 +174,11 @@ export default function HowItWorks() {
                 
                 {/* Glowing Dot Node */}
                 <div className={`w-4 h-4 rounded-full ${index % 2 === 0 ? 'bg-secondary' : 'bg-primary'} shadow-[0_0_20px_currentColor] ${step.glowColor} z-10 mb-6 relative`}>
-                  {/* Inner white dot for pop */}
                   <div className="absolute inset-1 bg-white rounded-full" />
                 </div>
                 
                 {/* Bottom Label */}
-                <span className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider text-center font-bold px-2">
+                <span className="text-gray-500 dark:text-white/40 text-[10px] md:text-xs uppercase tracking-wider text-center font-bold px-2 transition-colors duration-300">
                   {step.label}
                 </span>
               </motion.div>
@@ -201,15 +195,14 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 + (index * 0.1) }}
-              // Using the specific dark card color from the design
-              className="bg-[#13141C] border border-white/5 rounded-2xl p-6 flex items-start gap-5 hover:bg-[#1A1B26] hover:border-white/10 transition-all duration-300"
+              className="bg-white dark:bg-[#13141C] border border-gray-200 dark:border-white/5 rounded-2xl p-6 flex items-start gap-5 hover:bg-gray-50 dark:hover:bg-[#1A1B26] hover:border-gray-300 dark:hover:border-white/10 transition-all duration-300 shadow-sm dark:shadow-none"
             >
-              <div className="bg-white/5 p-3.5 rounded-xl shrink-0">
-                <feature.icon className="w-6 h-6 text-white/70" />
+              <div className="bg-gray-100 dark:bg-white/5 p-3.5 rounded-xl shrink-0 transition-colors duration-300">
+                <feature.icon className="w-6 h-6 text-gray-700 dark:text-white/70 transition-colors duration-300" />
               </div>
               <div>
-                <h4 className="text-white font-bold text-base mb-2">{feature.title}</h4>
-                <p className="text-white/50 text-sm leading-relaxed">{feature.desc}</p>
+                <h4 className="text-gray-900 dark:text-white font-bold text-base mb-2 transition-colors duration-300">{feature.title}</h4>
+                <p className="text-gray-600 dark:text-white/50 text-sm leading-relaxed transition-colors duration-300">{feature.desc}</p>
               </div>
             </motion.div>
           ))}
