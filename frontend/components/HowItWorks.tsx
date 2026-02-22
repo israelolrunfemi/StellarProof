@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Upload, Database, Shield, CheckCircle2, Zap, Lock, Code } from "lucide-react";
+import Image from "next/image";
 
-// Data for the 4 main timeline steps
 const steps = [
   {
     id: 1,
@@ -11,9 +11,8 @@ const steps = [
     desc: "Upload media files with original metadata.",
     icon: Upload,
     label: "METADATA ATTACHMENT",
-    // Placeholder for image. Replace with <Image /> component when you have assets.
-    imagePlaceholderBg: "bg-gradient-to-br from-pink-500/20 to-purple-500/20", 
     glowColor: "shadow-pink-500/50",
+    imageSrc: "/about-imgs/ingest.png",
   },
   {
     id: 2,
@@ -21,8 +20,8 @@ const steps = [
     desc: "Files are fragmented and distributed via IPFS.",
     icon: Database,
     label: "DECENTRALIZED IPFS",
-    imagePlaceholderBg: "bg-gradient-to-br from-blue-500/20 to-cyan-500/20",
     glowColor: "shadow-blue-500/50",
+    imageSrc: "/about-imgs/storage.png", 
   },
   {
     id: 3,
@@ -30,8 +29,8 @@ const steps = [
     desc: "Trusted Execution Environments process data off-chain.",
     icon: Shield,
     label: "CONFIDENTIAL COMPUTE",
-    imagePlaceholderBg: "bg-gradient-to-br from-pink-500/20 to-purple-500/20",
     glowColor: "shadow-pink-500/50",
+    imageSrc: "/about-imgs/the_landscape.jpeg", 
   },
   {
     id: 4,
@@ -39,10 +38,12 @@ const steps = [
     desc: "A cryptographic certificate is minted on the Stellar blockchain.",
     icon: CheckCircle2,
     label: "ON-CHAIN PROVENANCE",
-    imagePlaceholderBg: "bg-gradient-to-br from-blue-500/20 to-cyan-500/20",
     glowColor: "shadow-blue-500/50",
+    imageSrc: "/about-imgs/certify.png", 
   },
 ];
+
+
 
 // Data for the 3 bottom feature cards
 const bottomFeatures = [
@@ -123,12 +124,16 @@ export default function HowItWorks() {
               className="bg-[#13141C] border border-white/5 rounded-2xl overflow-hidden flex flex-col hover:border-secondary/30 transition-all duration-300 group"
             >
               {/* --- Image Placeholder Div --- */}
-              {/* REPLACE THIS DIV with your <Image /> component when you have the assets. */}
-              <div className={`w-full aspect-[4/3] ${step.imagePlaceholderBg} flex items-center justify-center relative`}>
-                {/* Simple placeholder icon to indicate where image goes */}
-                <step.icon className="w-12 h-12 text-white/20 absolute" />
-                {/* Overlay to darken the image area slightly */}
-                <div className="absolute inset-0 bg-black/20" />
+              <div className="w-full aspect-[4/3] relative overflow-hidden bg-[#0A0B0F]">
+                <Image
+                  src={step.imageSrc}
+                  alt={step.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                />
+                {/* Optional: A subtle gradient overlay to blend the bottom of the image into the card */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#13141C] via-transparent to-transparent opacity-80" />
               </div>
               
               <div className="p-6 flex flex-col flex-grow relative">
