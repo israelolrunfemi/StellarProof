@@ -4,7 +4,7 @@ import HeroSection  from "@/components/HeroSection";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-darkblue-dark font-sans">
+    <div className="min-h-screen font-sans">
       <Header />
      
       <main className="w-full">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "./context/ThemeContext"; // ✅ ADDED
+import { ThemeProvider } from "./context/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,29 +24,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // ✅ suppressHydrationWarning: prevents React warning caused by the
-    //    inline script adding the 'dark' class before hydration
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/*
-          ✅ FOUC Prevention Script — must be the FIRST thing in <head>.
-          Runs before React hydrates so the correct theme class is applied
-          instantly on page load, eliminating any flash of incorrect theme.
-        */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var stored = localStorage.getItem('stellarproof-theme');
-                  if (stored === 'dark') {
-                    document.documentElement.classList.add('dark');
-                  } else if (stored === 'light') {
+                  if (stored === 'light') {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.dataset.theme = 'light';
                   } else {
-                    // No saved preference — fall back to OS setting
-                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    if (prefersDark) document.documentElement.classList.add('dark');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.dataset.theme = 'dark';
                   }
                 } catch(e) {}
               })();
@@ -57,10 +48,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
       >
-        {/* ✅ ThemeProvider wraps all children so useTheme() works anywhere in the app */}
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
