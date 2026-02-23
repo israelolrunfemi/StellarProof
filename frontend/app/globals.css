@@ -1,15 +1,11 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   /* StellarProof palette */
   --color-primary: #256af4;
   --color-primary-foreground: #ffffff;
@@ -21,25 +17,43 @@
   --color-darkblue: #012254;
   --color-darkblue-light: #256af4;
   --color-darkblue-dark: #000000;
+
   --shadow-glow: 0 0 10px 2px rgba(37, 106, 244, 0.7);
   --shadow-header: 0 4px 6px -1px rgba(1, 34, 84, 0.3);
   --shadow-button-glow: 0 0 15px rgba(37, 106, 244, 0.5);
   --shadow-button-glow-secondary: 0 0 15px rgba(255, 124, 233, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* This targets the 'dark' class added by your ThemeToggle */
+.dark {
+  --background: #012254;
+  --foreground: #f3f4f6;
 }
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light dark;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Smooth transition when theme class is toggled */
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Global smooth transitions for elements */
+*,
+*::before,
+*::after {
+  transition-property: color, background-color, border-color,
+    outline-color, text-decoration-color, fill, stroke, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+
+.no-transition *,
+.no-transition *::before,
+.no-transition *::after {
+  transition: none !important;
 }
