@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
+import { WalletModal } from "./WalletModal";
 import ThemeToggle from "./ThemeToggle";
 
 const NAV_LINKS = [
@@ -126,11 +127,10 @@ export default function Header() {
                   <a
                     href={item.href}
                     onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
-                    className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue ${
-                      activeSection === item.href
+                    className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue ${activeSection === item.href
                         ? "text-gray-900 dark:text-white"
                         : "text-gray-600 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
-                    }`}
+                      }`}
                   >
                     {item.label}
                     {activeSection === item.href && (
@@ -204,16 +204,10 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-
           <ThemeToggle />
-
-          <Link
-            href="/creator/upload-content"
-            className="hidden rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow transition hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue sm:inline-block"
-          >
-            Launch App
-          </Link>
-
+          <div className="hidden sm:block">
+            <WalletModal />
+          </div>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 dark:text-white transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue lg:hidden"
@@ -298,14 +292,8 @@ export default function Header() {
                   )
                 )}
               </ul>
-              <div className="mt-4 border-t border-gray-200 dark:border-white/10 pt-4">
-                <Link
-                  href="/creator/upload-content"
-                  className="flex w-full items-center justify-center rounded-lg bg-primary py-3 text-base font-semibold text-white shadow-button-glow transition hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Launch App
-                </Link>
+              <div className="mt-4 border-t border-gray-200 dark:border-white/10 pt-4 px-4 w-full">
+                <WalletModal />
               </div>
             </nav>
           </motion.div>

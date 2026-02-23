@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/Footer";
 import "./globals.css";
+import { WalletProvider } from "../context/WalletContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const geistSans = Geist({
@@ -49,8 +50,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
       >
-        <ThemeProvider>{children}
-        <Footer />
+        <ThemeProvider>
+          <WalletProvider>
+            {children}
+            <Footer />
+          </WalletProvider>
         </ThemeProvider>
       </body>
     </html>
