@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import HowItWorks from "@/components/HowItWorks";
-
+import CallToAction from "@/components/CallToAction";
 
 export default function Home() {
   return (
@@ -52,6 +52,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="developer"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -66,6 +67,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="assets"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -80,6 +82,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="use-cases"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -94,6 +97,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="pricing"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -108,6 +112,8 @@ export default function Home() {
             </p>
           </div>
         </section>
+
+        <CallToAction />
       </main>
     </div>
   );
