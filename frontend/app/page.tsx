@@ -3,6 +3,7 @@ import About from "@/components/About";
 import HeroSection from "@/components/HeroSection";
 import Ecosystem from "@/components/Ecosystem";
 
+
 export default function Home() {
   return (
     <div className="min-h-screen font-sans">
@@ -14,6 +15,8 @@ export default function Home() {
           aria-label="Home"
         >
           <HeroSection />
+         
+        
         </section>
         
         <About />
