@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import About from "@/components/About";
-import HeroSection  from "@/components/HeroSection";
+import HeroSection from "@/components/HeroSection";
+import Ecosystem from "@/components/Ecosystem";
 
 
 export default function Home() {
@@ -17,7 +18,12 @@ export default function Home() {
          
         
         </section>
+        
         <About />
+        
+        {/* Ecosystem Integrations Section */}
+        <Ecosystem />
+        
         <section
           id="creator"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -32,6 +38,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="developer"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -46,6 +53,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="assets"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -60,6 +68,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="use-cases"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
@@ -74,6 +83,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        
         <section
           id="pricing"
           className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
