@@ -41,9 +41,11 @@ export default function CallToAction() {
           </div>
 
           {/* Headline */}
-          <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight">
-            Build Trust Into <br className="hidden sm:block" />
-            Your Applications. <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">On-Chain.</span>
+          <h2 className="mx-auto max-w-3xl text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
+            Build Trust Into Your Applications.{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+              On-Chain.
+            </span>
           </h2>
 
           {/* Subtext */}
