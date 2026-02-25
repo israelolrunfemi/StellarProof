@@ -40,7 +40,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen overflow-hidden">
+    <section id="home" className="relative min-h-[calc(100svh-4rem)] overflow-hidden">
       {/* Dark radial gradient background */}
       {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#1a1f2e_0%,_#0B1120_80%)]" /> */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#256AF4] via-[##60A5FA] to-[##FF7CE9]" />
@@ -51,7 +51,7 @@ export default function HeroSection() {
       {/* Soft overlay to improve text contrast */}
       <div className="absolute inset-0 bg-black/0 dark:bg-black/20 pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col items-center px-6 pt-24 pb-20 md:pt-32 md:pb-28 mx-auto max-w-7xl">
+      <div className="relative z-10 flex flex-col items-center px-6 pt-7 pb-10 md:pt-10 md:pb-12 mx-auto max-w-7xl">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -61,7 +61,7 @@ export default function HeroSection() {
           {/* Badge */}
           <motion.div
             variants={itemVariants}
-            className="bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-full px-5 py-2 mb-10 flex items-center gap-2"
+            className="bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-full px-5 py-2 mb-4 flex items-center gap-2"
           >
             <ShieldCheck className="w-4 h-4 text-[#FF7CE9]" />
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-[#FF7CE9]">
@@ -85,7 +85,7 @@ export default function HeroSection() {
           {/* Subtitle */}
           <motion.p
             variants={itemVariants}
-            className="mt-8 text-center max-w-xl text-gray-600 dark:text-white/70 text-base md:text-lg leading-relaxed"
+            className="mt-4 text-center max-w-xl text-gray-600 dark:text-white/70 text-base md:text-lg leading-relaxed"
           >
             Verifiable digital authenticity powered by Soroban smart contracts
             and trusted execution environments.
@@ -94,7 +94,7 @@ export default function HeroSection() {
           {/* CTA Buttons */}
           <motion.div
             variants={itemVariants}
-            className="mt-10 flex flex-col sm:flex-row items-center gap-4"
+            className="mt-5 flex flex-col sm:flex-row items-center gap-4"
           >
             <button className="group flex items-center gap-2 px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all duration-200">
               Get Started
@@ -108,7 +108,7 @@ export default function HeroSection() {
           {/* Trust Badge */}
           <motion.div
             variants={itemVariants}
-            className="mt-14 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl px-6 py-3 flex items-center gap-3"
+            className="mt-6 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl px-6 py-3 flex items-center gap-3"
           >
             <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
               <Lock className="w-5 h-5 text-[#FF7CE9]" />
@@ -126,7 +126,7 @@ export default function HeroSection() {
           {/* Feature Cards */}
           <motion.div
             variants={itemVariants}
-            className="mt-20 w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-5"
+            className="mt-10 w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-5"
           >
             {features.map((feature) => (
               <motion.div

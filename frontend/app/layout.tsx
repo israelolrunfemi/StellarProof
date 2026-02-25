@@ -48,6 +48,7 @@ export default function RootLayout({
           z-index: 100;
         }
       `}</style>
+    <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -55,16 +56,17 @@ export default function RootLayout({
               (function() {
                 try {
                   var stored = localStorage.getItem('stellarproof-theme');
-                  if (stored === 'light') {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.dataset.theme = 'light';
-                  } else {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.dataset.theme = 'dark';
+                  if (!stored) {
+                    stored = 'dark';
+                    localStorage.setItem('stellarproof-theme', stored);
                   }
                 } catch(e) {
                   document.documentElement.classList.add('dark');
                 }
+                  var isDark = stored !== 'light';
+                  document.documentElement.classList.toggle('dark', isDark);
+                  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+                } catch(e) {}
               })();
             `,
           }}

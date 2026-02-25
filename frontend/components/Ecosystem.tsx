@@ -21,7 +21,6 @@ interface EcosystemProps {
  */
 export default function Ecosystem({ className = "" }: EcosystemProps) {
   const [mounted, setMounted] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Prevent hydration mismatch and detect theme
   useEffect(() => {
@@ -29,33 +28,20 @@ export default function Ecosystem({ className = "" }: EcosystemProps) {
     
     // Check for dark mode using various methods
     const checkDarkMode = () => {
-      // Method 1: Check HTML class (most common)
       if (document.documentElement.classList.contains('dark')) {
         return true;
       }
       
-      // Method 2: Check data attribute
       if (document.documentElement.getAttribute('data-theme') === 'dark') {
-        return true;
-      }
-      
-      // Method 3: Check CSS variables or computed styles
-      const computedStyle = getComputedStyle(document.documentElement);
-      const bgColor = computedStyle.getPropertyValue('--background') || computedStyle.backgroundColor;
-      
-      // Method 4: Fallback to system preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         return true;
       }
       
       return false;
     };
 
-    setIsDarkMode(checkDarkMode());
-
     // Observer to watch for theme changes
     const observer = new MutationObserver(() => {
-      setIsDarkMode(checkDarkMode());
+      checkDarkMode();
     });
 
     observer.observe(document.documentElement, {
@@ -65,7 +51,7 @@ export default function Ecosystem({ className = "" }: EcosystemProps) {
 
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => setIsDarkMode(checkDarkMode());
+    const handleChange = () => checkDarkMode();
     mediaQuery.addEventListener('change', handleChange);
 
     return () => {
@@ -325,8 +311,8 @@ export default function Ecosystem({ className = "" }: EcosystemProps) {
                 {categoryTitles[category as keyof typeof categoryTitles]}
               </motion.h3>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">
-                {items.map((integration, index) => (
+              <div className="mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {items.map((integration) => (
                   <motion.div
                     key={integration.name}
                     variants={itemVariants}
@@ -334,7 +320,7 @@ export default function Ecosystem({ className = "" }: EcosystemProps) {
                       scale: 1.05,
                       transition: { duration: 0.2 }
                     }}
-                    className="group relative flex flex-col items-center p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 dark:hover:shadow-primary/10"
+                    className="group relative flex w-full flex-col items-center p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 dark:hover:shadow-primary/10"
                   >
                     {/* Logo */}
                     <div className="mb-3 text-gray-600 dark:text-gray-300 group-hover:text-primary transition-all duration-300 transform group-hover:scale-110">

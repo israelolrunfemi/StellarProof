@@ -1,79 +1,136 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Rocket } from "lucide-react";
-import Link from "next/link"; 
+import { Upload, ShieldCheck, FileSignature, Database, ArrowRight } from "lucide-react";
 
-export default function CallToAction() {
+const steps = [
+  {
+    id: 1,
+    title: "Ingest Data",
+    description: "Securely upload your digital assets or data streams to our verifiable ingestion layer.",
+    icon: Upload,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/20",
+  },
+  {
+    id: 2,
+    title: "Verify Integrity",
+    description: "Trusted Execution Environments (TEEs) process and verify the authenticity of the data.",
+    icon: ShieldCheck,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/20",
+  },
+  {
+    id: 3,
+    title: "Generate Proof",
+    description: "Cryptographic proofs are generated to certify the verification result without revealing sensitive data.",
+    icon: FileSignature,
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+    borderColor: "border-pink-500/20",
+  },
+  {
+    id: 4,
+    title: "On-Chain Record",
+    description: "The proof is permanently recorded on the Stellar blockchain via Soroban smart contracts.",
+    icon: Database,
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/20",
+  },
+];
+
+export default function HowItWorks() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+      },
+    },
+  };
+
   return (
-    <section 
-      id="cta"
-      className="relative w-full max-w-full overflow-hidden py-24 bg-gray-50 dark:bg-[#050507] transition-colors duration-300 font-sans border-t border-gray-200 dark:border-white/5"
-    >
-
-      <motion.div
-        animate={{ y: [0, -30, 0], x: [0, 20, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-64 md:w-96 h-64 md:h-96 bg-primary/20 dark:bg-primary/10 blur-[100px] rounded-full pointer-events-none"
-      />
+    <section id="how-it-works" className="py-24 bg-white dark:bg-[#020617] relative overflow-hidden transition-colors duration-300">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-white/10 to-transparent" />
       
-      <motion.div
-        animate={{ y: [0, 30, 0], x: [0, -20, 0], scale: [1, 1.2, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-1/4 right-1/4 w-64 md:w-96 h-64 md:h-96 bg-secondary/20 dark:bg-secondary/10 blur-[100px] rounded-full pointer-events-none"
-      />
-
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6 }}
-          className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden bg-white dark:bg-[#0D0E15] border border-gray-200 dark:border-white/5 shadow-xl dark:shadow-none text-center px-6 py-16 transition-colors duration-300"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={containerVariants}
+          className="text-center mb-16"
         >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
-            <Rocket className="w-4 h-4 text-primary" />
-            <span className="text-xs font-bold tracking-wide text-primary uppercase">
-              Ready to deploy?
-            </span>
-          </div>
-
-          {/* Headline */}
-          <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight">
-            Build Trust Into <br className="hidden sm:block" />
-            Your Applications. <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">On-Chain.</span>
-          </h2>
-
-          {/* Subtext */}
-          <p className="text-base md:text-lg text-gray-600 dark:text-white/60 mb-10 max-w-2xl mx-auto">
-            Join the ecosystem of creators and developers leveraging StellarProof to secure, verify, and immortalize digital assets with zero-trust architecture.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            
-        
-            <Link 
-              href="/register" 
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-primary text-white font-semibold hover:bg-blue-600 transition-colors shadow-button-glow"
-            >
-              Get Started
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            
-            <Link 
-              href="/docs" 
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-secondary text-secondary font-semibold hover:bg-secondary/10 transition-colors"
-            >
-              <BookOpen className="w-5 h-5" />
-              View Docs
-            </Link>
-
-          </div>
+          <motion.h2 
+            variants={itemVariants}
+            className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6"
+          >
+            How <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">StellarProof</span> Works
+          </motion.h2>
+          <motion.p 
+            variants={itemVariants}
+            className="max-w-2xl mx-auto text-lg text-gray-600 dark:text-gray-400"
+          >
+            A seamless pipeline from raw data to immutable blockchain proof.
+          </motion.p>
         </motion.div>
 
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={containerVariants}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative"
+        >
+          {/* Connecting Line (Desktop) */}
+          <div className="hidden lg:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-gray-200 dark:via-white/10 to-transparent z-0 transform translate-y-8" />
+
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.id}
+              variants={itemVariants}
+              className="relative z-10 flex flex-col items-center text-center group"
+            >
+              <div 
+                className={`w-20 h-20 rounded-2xl ${step.bgColor} border ${step.borderColor} flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110 shadow-lg`}
+              >
+                <step.icon className={`w-10 h-10 ${step.color}`} />
+              </div>
+              
+              <div className="bg-white dark:bg-[#020617] px-2 relative z-10">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
+                  {step.description}
+                </p>
+              </div>
+
+              {/* Arrow for Mobile/Tablet */}
+              {index < steps.length - 1 && (
+                <div className="lg:hidden mt-6 text-gray-300 dark:text-gray-700">
+                  <ArrowRight className="w-6 h-6 transform rotate-90 md:rotate-0" />
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
