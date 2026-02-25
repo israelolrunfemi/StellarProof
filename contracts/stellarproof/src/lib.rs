@@ -1,23 +1,60 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, vec, Env, String, Vec};
 
-#[contract]
-pub struct Contract;
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};
 
-// This is a sample contract. Replace this placeholder with your own contract logic.
-// A corresponding test example is available in `test.rs`.
-//
-// For comprehensive examples, visit <https://github.com/stellar/soroban-examples>.
-// The repository includes use cases for the Stellar ecosystem, such as data storage on
-// the blockchain, token swaps, liquidity pools, and more.
-//
-// Refer to the official documentation:
-// <https://developers.stellar.org/docs/build/smart-contracts/overview>.
-#[contractimpl]
-impl Contract {
-    pub fn hello(env: Env, to: String) -> Vec<String> {
-        vec![&env, String::from_str(&env, "Hello"), to]
-    }
+#[contracttype]
+pub enum DataKey {
+    Admin,
+    Provider(Address), // key per provider address
 }
 
-mod test;
+#[contract]
+pub struct OracleProviderApproval;
+
+#[contractimpl]
+impl OracleProviderApproval {
+    // One-time initializer to set admin
+    pub fn initialize(env: Env, admin: Address) {
+        // Prevent re-initialization
+        if env.storage().instance().has(&DataKey::Admin) {
+            // In production, use custom errors, but a simple panic works for tests
+            panic!("Already initialized");
+        }
+        env.storage().instance().set(&DataKey::Admin, &admin);
+    }
+
+    // Add an approved provider (admin-only)
+    pub fn add_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+
+        // Require admin signature
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().set(&key, &true);
+    }
+
+    // Remove an approved provider (admin-only)
+    pub fn remove_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().remove(&key);
+    }
+
+    // Query helper: is an address approved?
+    pub fn is_provider(env: Env, provider: Address) -> bool {
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().has(&key)
+    }
+}
