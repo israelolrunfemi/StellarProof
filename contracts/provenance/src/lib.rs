@@ -54,15 +54,15 @@ impl ProvenanceContract {
             .set(&symbol_short!("ORACLE"), &oracle);
     }
 
-    /// Mint a new provenance certificate for verified content
-    /// Only callable by the Oracle contract
+    /// Mint a new provenance certificate for verified content.
+    /// Only callable by the Oracle contract.
     ///
     /// # Arguments
-    /// * `to` - Address of the certificate recipient/owner
-    /// * `details` - Certificate details including content hash and metadata
+    /// * `to` - Address of the certificate recipient/owner (stored as `creator`)
+    /// * `details` - Certificate details: storage_id, manifest_hash, attestation_hash
     ///
     /// # Returns
-    /// Certificate ID on success
+    /// Certificate ID on success. Emits `CertificateMinted` event.
     pub fn mint(env: Env, to: Address, details: CertificateDetails) -> u64 {
         // Get oracle address from storage
         let oracle: Address = env
