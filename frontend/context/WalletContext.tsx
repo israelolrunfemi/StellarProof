@@ -52,9 +52,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                 setIsConnected(true);
                 localStorage.setItem("freighter_public_key", address);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            if (err?.message?.includes("User declined")) {
+            const errorMessage = err instanceof Error ? err.message : "";
+            if (errorMessage.includes("User declined")) {
                 alert("Connection request was rejected by the user.");
             } else {
                 alert("An error occurred while connecting to Freighter.");
