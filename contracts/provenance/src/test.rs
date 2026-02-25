@@ -35,6 +35,7 @@ fn test_mint_certificate() {
     assert_eq!(cert.manifest_hash, details.manifest_hash);
     assert_eq!(cert.attestation_hash, details.attestation_hash);
     assert_eq!(cert.creator, owner);
+    assert_eq!(cert.timestamp, env.ledger().timestamp(), "timestamp must be set at mint time");
 }
 
 #[test]
@@ -154,5 +155,39 @@ fn test_certificate_minted_event() {
     assert!(
         events_str.contains("CertificateMinted") || events_str.contains("certificate_minted"),
         "CertificateMinted event should be emitted; events: {events_str}"
+    );
+}
+
+#[test]
+fn test_immutable_timestamp() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(ProvenanceContract, ());
+    let client = ProvenanceContractClient::new(&env, &contract_id);
+    let oracle = Address::generate(&env);
+    let owner = Address::generate(&env);
+
+    client.initialize(&oracle);
+    let details = CertificateDetails {
+        storage_id: String::from_str(&env, "sid"),
+        manifest_hash: String::from_str(&env, "mhash"),
+        attestation_hash: String::from_str(&env, "ahash"),
+    };
+
+    let cert_id = client.mint(&owner, &details);
+    let cert = client.get_certificate(&cert_id).unwrap();
+    let stored_timestamp = cert.timestamp;
+    assert_eq!(
+        stored_timestamp,
+        env.ledger().timestamp(),
+        "timestamp must equal ledger time at mint"
+    );
+
+    let cert_again = client.get_certificate(&cert_id).unwrap();
+    assert_eq!(
+        cert_again.timestamp,
+        stored_timestamp,
+        "timestamp is immutable and must not change on subsequent reads"
     );
 }

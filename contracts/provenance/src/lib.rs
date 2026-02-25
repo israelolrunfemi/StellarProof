@@ -32,6 +32,7 @@ pub struct Certificate {
     pub manifest_hash: String,
     pub attestation_hash: String,
     pub creator: Address,
+    /// Ledger timestamp at mint time; set once and immutable (no update API).
     pub timestamp: u64,
 }
 
@@ -80,12 +81,13 @@ impl ProvenanceContract {
             .unwrap_or(0);
         counter += 1;
 
+        let mint_timestamp = env.ledger().timestamp();
         let certificate = Certificate {
             storage_id: details.storage_id.clone(),
             manifest_hash: details.manifest_hash.clone(),
             attestation_hash: details.attestation_hash.clone(),
             creator: to.clone(),
-            timestamp: env.ledger().timestamp(),
+            timestamp: mint_timestamp,
         };
 
         let cert_key = (symbol_short!("CERT"), counter);
