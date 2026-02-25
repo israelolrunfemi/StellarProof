@@ -16,8 +16,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StellarProof",
-  description: "The Truth Engine for the Stellar Ecosystem",
+  title: "StellarProof - The Truth Engine for Digital Content",
+  description: "Verifiable digital authenticity powered by Soroban smart contracts. Cryptographically signed verification for digital content and media ecosystems.",
+  keywords: "stellar, blockchain, verification, authenticity, soroban, smart contracts",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: "#256af4",
 };
 
 export default function RootLayout({
@@ -26,7 +34,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
+      {/* Top accent line */}
+      <style>{`
+        html::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(to right, #ff7ce9, #ff7ce9, #ff7ce9);
+          z-index: 100;
+        }
+      `}</style>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -41,14 +62,16 @@ export default function RootLayout({
                     document.documentElement.classList.add('dark');
                     document.documentElement.dataset.theme = 'dark';
                   }
-                } catch(e) {}
+                } catch(e) {
+                  document.documentElement.classList.add('dark');
+                }
               })();
             `,
           }}
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue-dark text-gray-900 dark:text-gray-100 transition-colors duration-300`}
       >
         <ThemeProvider>
           <WalletProvider>
