@@ -13,32 +13,24 @@ pub struct OracleProviderApproval;
 
 #[contractimpl]
 impl OracleProviderApproval {
-    // One-time initializer to set admin
     pub fn initialize(env: Env, admin: Address) {
-        // Prevent re-initialization
         if env.storage().instance().has(&DataKey::Admin) {
-            // In production, use custom errors, but a simple panic works for tests
             panic!("Already initialized");
         }
         env.storage().instance().set(&DataKey::Admin, &admin);
     }
 
-    // Add an approved provider (admin-only)
     pub fn add_provider(env: Env, provider: Address) {
         let admin: Address = env
             .storage()
             .instance()
             .get(&DataKey::Admin)
             .expect("Admin not set; initialize first");
-
-        // Require admin signature
         admin.require_auth();
 
         let key = DataKey::Provider(provider);
         env.storage().persistent().set(&key, &true);
     }
-
-    // Remove an approved provider (admin-only)
     pub fn remove_provider(env: Env, provider: Address) {
         let admin: Address = env
             .storage()
