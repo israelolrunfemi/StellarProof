@@ -100,17 +100,19 @@ impl StellarProofContract {
     
     /// Call provenance contract to mint certificate
     fn mint_certificate(env: &Env, content_hash: &String, owner: &Address) -> Result<u64, ()> {
-        // Get provenance contract address
         let provenance_addr: Address = match env.storage().instance().get(&symbol_short!("PROV_ADR")) {
             Some(addr) => addr,
             None => return Err(()),
         };
-        
-        // Create provenance contract client
+
         let provenance_client = provenance::Client::new(env, &provenance_addr);
-        
-        // Call mint function with error handling
-        match provenance_client.try_mint(content_hash, owner) {
+        let details = provenance::CertificateDetails {
+            storage_id: String::from_str(env, ""),
+            manifest_hash: content_hash.clone(),
+            attestation_hash: content_hash.clone(),
+        };
+
+        match provenance_client.try_mint(owner, &details) {
             Ok(result) => result.map_err(|_| ()),
             Err(_) => Err(()),
         }
