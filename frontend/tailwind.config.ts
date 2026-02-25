@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss";
+
+const config: Config = {
   darkMode: "class",
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,27 +11,27 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#256AF4",
+          DEFAULT: "#256AF4", // Deep Blue
           foreground: "#ffffff",
-          light: "#60A5FA",
-          dark: "#012254",
+          light: "#60A5FA",   // Medium Blue
+          dark: "#012254",    // Dark Blue
         },
         secondary: {
-          DEFAULT: "#FF7CE9",
+          DEFAULT: "#FF7CE9", // Deep Pink
           foreground: "#000000",
-          light: "#FFB7F3",
-          dark: "#FF7CE9",
+          light: "#FFB7F3",   // Light Pink
+          dark: "#FF7CE9",    // Deep Pink
         },
         accent: {
-          DEFAULT: "#60A5FA",
+          DEFAULT: "#60A5FA", // Medium Blue
           foreground: "#000000",
-          light: "#FFB7F3",
-          dark: "#256AF4",
+          light: "#FFB7F3",   // Light Pink
+          dark: "#256AF4",    // Deep Blue
         },
         darkblue: {
-          DEFAULT: "#012254",
-          light: "#256AF4",
-          dark: "#000000",
+          DEFAULT: "#012254", // Dark Blue  ← used as dark:bg-darkblue base
+          light: "#256AF4",   // Deep Blue
+          dark: "#000000",    // Black
         },
       },
       boxShadow: {
@@ -43,3 +44,4 @@ module.exports = {
   },
   plugins: [],
 };
+export default config;
