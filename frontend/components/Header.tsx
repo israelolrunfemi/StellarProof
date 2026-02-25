@@ -102,7 +102,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/20 bg-white dark:bg-darkblue shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2)] transition-colors duration-300">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-blue-500/10 bg-white dark:bg-darkblue/80 dark:backdrop-blur-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_6px_-1px_rgba(1,34,84,0.4)] transition-colors duration-300">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
@@ -203,7 +203,10 @@ export default function Header() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <button className="hidden sm:inline-flex px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-300">
+            Launch App
+          </button>
           <ThemeToggle />
           <div className="hidden sm:block">
             <WalletModal />
