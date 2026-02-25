@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, xdr::ToXdr, BytesN, Env, String,
+    contract, contracterror, contractimpl, contracttype, xdr::ToXdr, Address, BytesN, Env, String,
 };
 
 #[contracterror]
@@ -41,6 +41,7 @@ pub struct Attestation {
 
 #[contracttype]
 pub enum DataKey {
+    Admin,
     Request(u64),
     Provider(BytesN<32>),
     TeeHash(BytesN<32>),
@@ -63,6 +64,58 @@ pub struct Registry;
 
 #[contractimpl]
 impl Registry {
+    /// Initialize the contract with an admin address.
+    /// Must be called once before any admin-gated operations.
+    pub fn initialize(env: Env, admin: Address) {
+        env.storage().persistent().set(&DataKey::Admin, &admin);
+    }
+
+    /// Return the stored admin address, if any.
+    pub fn get_admin(env: Env) -> Option<Address> {
+        env.storage().persistent().get(&DataKey::Admin)
+    }
+
+    /// Add a trusted TEE measurement hash to the registry.
+    /// Only the admin may call this function.
+    /// Emits a `TeeHashAdded` event on success.
+    pub fn add_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
+        // Retrieve the admin; reject if the contract has not been initialised.
+        let admin: Address = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Admin)
+            .ok_or(VerificationError::Unauthorized)?;
+
+        // Require that the transaction was authorised by the admin.
+        admin.require_auth();
+
+        // Store the hash in persistent storage.
+        env.storage()
+            .persistent()
+            .set(&DataKey::TeeHash(hash.clone()), &true);
+
+        // Emit TeeHashAdded event.
+        #[allow(deprecated)]
+        env.events().publish(
+            (
+                soroban_sdk::Symbol::new(&env, "registry"),
+                soroban_sdk::Symbol::new(&env, "TeeHashAdded"),
+                hash.clone(),
+            ),
+            TeeHashEventData { hash: hash.clone() },
+        );
+
+        Ok(())
+    }
+
+    /// Return whether `hash` is registered as a trusted TEE measurement.
+    pub fn has_tee_hash(env: Env, hash: BytesN<32>) -> bool {
+        env.storage()
+            .persistent()
+            .get(&DataKey::TeeHash(hash))
+            .unwrap_or(false)
+    }
+
     /// Setup helper: Add a provider
     pub fn add_provider(env: Env, provider: BytesN<32>) {
         env.storage().persistent().set(&DataKey::Provider(provider.clone()), &true);
@@ -95,23 +148,7 @@ impl Registry {
         );
     }
 
-    /// Setup helper: Add a TEE hash
-    pub fn add_tee_hash(env: Env, hash: BytesN<32>) {
-        env.storage().persistent().set(&DataKey::TeeHash(hash.clone()), &true);
-        #[allow(deprecated)]
-        env.events().publish(
-            (
-                soroban_sdk::Symbol::new(&env, "registry"),
-                soroban_sdk::Symbol::new(&env, "TeeHashAdded"),
-                hash.clone(),
-            ),
-            TeeHashEventData {
-                hash: hash.clone(),
-            },
-        );
-    }
-
-    /// Setup helper: Remove a TEE hash
+    /// Setup helper: Remove a TEE hash (admin-gated via require_auth on stored admin)
     pub fn remove_tee_hash(env: Env, hash: BytesN<32>) {
         env.storage().persistent().remove(&DataKey::TeeHash(hash.clone()));
         #[allow(deprecated)]
@@ -160,7 +197,7 @@ impl Registry {
             return Err(VerificationError::AlreadyProcessed);
         }
 
-        // 3. Validate the signature ... 
+        // 3. Validate the signature ...
         let payload = attestation.clone().to_xdr(&env);
         env.crypto()
             .ed25519_verify(&attestation.provider, &payload, &signature);
