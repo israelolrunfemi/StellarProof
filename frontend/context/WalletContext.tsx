@@ -8,9 +8,10 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { walletService } from "@/services/wallet";
+import { walletService, type NetworkDetails } from "@/services/wallet";
 
 const STORAGE_KEY = "freighter_public_key";
+const NETWORK_POLL_INTERVAL_MS = 4000;
 
 interface WalletState {
   publicKey: string | null;
@@ -18,10 +19,12 @@ interface WalletState {
   isFreighterInstalled: boolean | null;
   isConnecting: boolean;
   connectError: string | null;
+  networkDetails: NetworkDetails | null;
   connect: () => Promise<void>;
   disconnect: () => void;
   signTx: (xdr: string) => Promise<string>;
   clearError: () => void;
+  refreshNetwork: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletState | undefined>(undefined);
@@ -33,6 +36,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [networkDetails, setNetworkDetails] = useState<NetworkDetails | null>(null);
+
+  const refreshNetwork = useCallback(async () => {
+    try {
+      const details = await walletService.getNetworkDetails();
+      setNetworkDetails(details);
+    } catch {
+      setNetworkDetails(null);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +72,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   }, [mounted]);
 
+  useEffect(() => {
+    if (!mounted || !isConnected) return;
+    refreshNetwork();
+    const interval = setInterval(refreshNetwork, NETWORK_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [mounted, isConnected, refreshNetwork]);
+
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -84,6 +104,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.setItem(STORAGE_KEY, result.address);
         }
+        const details = await walletService.getNetworkDetails();
+        setNetworkDetails(details);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to connect.";
@@ -97,6 +119,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     setIsConnected(false);
     setConnectError(null);
+    setNetworkDetails(null);
     if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
   }, []);
 
@@ -111,10 +134,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     isFreighterInstalled,
     isConnecting,
     connectError,
+    networkDetails,
     connect,
     disconnect,
     signTx,
     clearError,
+    refreshNetwork,
   };
 
   return (
