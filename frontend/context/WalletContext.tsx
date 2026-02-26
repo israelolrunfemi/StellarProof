@@ -29,7 +29,9 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean | null>(null);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState<
+    boolean | null
+  >(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,7 +49,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    const saved =
+      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
     if (!saved) return;
     walletService.getAddress().then((address) => {
       if (address && address === saved) {
@@ -59,23 +62,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   }, [mounted]);
 
-            const { address, error } = await requestAccess();
-            if (error) {
-                throw new Error(error);
-            }
-            if (address) {
-                setPublicKey(address);
-                setIsConnected(true);
-                localStorage.setItem("freighter_public_key", address);
-            }
-        } catch (err: unknown) {
-            console.error(err);
-            const errorMessage = err instanceof Error ? err.message : "";
-            if (errorMessage.includes("User declined")) {
-                alert("Connection request was rejected by the user.");
-            } else {
-                alert("An error occurred while connecting to Freighter.");
-            }
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -87,22 +73,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     setIsConnecting(true);
     try {
-      const result = await walletService.requestAccess();
-      if (result.error) {
-        setConnectError(
-          result.error.toLowerCase().includes("declined") ? "Connection was declined." : result.error
-        );
-        return;
+      const { address, error } = await walletService.requestAccess();
+      if (error) {
+        throw new Error(error);
       }
-      if (result.address) {
-        setPublicKey(result.address);
+      if (address) {
+        setPublicKey(address);
         setIsConnected(true);
         setConnectError(null);
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, result.address);
+          localStorage.setItem(STORAGE_KEY, address);
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to connect.";
       setConnectError(message);
     } finally {
@@ -134,9 +117,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
 }
 
