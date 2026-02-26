@@ -61,6 +61,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   }, [mounted]);
 
+
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {

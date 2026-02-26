@@ -66,35 +66,33 @@ pub struct Registry;
 impl Registry {
     /// Initialize the contract with an admin address.
     /// Must be called once before any admin-gated operations.
-    pub fn initialize(env: Env, admin: Address) {
-        env.storage().persistent().set(&DataKey::Admin, &admin);
+    pub fn init(env: Env, admin: Address) {
+        if env.storage().instance().has(&DataKey::Admin) {
+            panic!("Already initialized");
+        }
+        env.storage().instance().set(&DataKey::Admin, &admin);
     }
 
     /// Return the stored admin address, if any.
     pub fn get_admin(env: Env) -> Option<Address> {
-        env.storage().persistent().get(&DataKey::Admin)
+        env.storage().instance().get(&DataKey::Admin)
     }
 
     /// Add a trusted TEE measurement hash to the registry.
     /// Only the admin may call this function.
     /// Emits a `TeeHashAdded` event on success.
     pub fn add_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
-        // Retrieve the admin; reject if the contract has not been initialised.
         let admin: Address = env
             .storage()
-            .persistent()
+            .instance()
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
-
-        // Require that the transaction was authorised by the admin.
         admin.require_auth();
 
-        // Store the hash in persistent storage.
         env.storage()
             .persistent()
             .set(&DataKey::TeeHash(hash.clone()), &true);
 
-        // Emit TeeHashAdded event.
         #[allow(deprecated)]
         env.events().publish(
             (
@@ -108,6 +106,33 @@ impl Registry {
         Ok(())
     }
 
+    /// Remove a TEE hash from the registry.
+    /// Only the admin may call this function.
+    pub fn remove_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(VerificationError::Unauthorized)?;
+        admin.require_auth();
+
+        env.storage().persistent().remove(&DataKey::TeeHash(hash.clone()));
+
+        #[allow(deprecated)]
+        env.events().publish(
+            (
+                soroban_sdk::Symbol::new(&env, "registry"),
+                soroban_sdk::Symbol::new(&env, "TeeHashRemoved"),
+                hash.clone(),
+            ),
+            TeeHashEventData {
+                hash: hash.clone(),
+            },
+        );
+
+        Ok(())
+    }
+
     /// Return whether `hash` is registered as a trusted TEE measurement.
     pub fn has_tee_hash(env: Env, hash: BytesN<32>) -> bool {
         env.storage()
@@ -116,8 +141,16 @@ impl Registry {
             .unwrap_or(false)
     }
 
-    /// Setup helper: Add a provider
-    pub fn add_provider(env: Env, provider: BytesN<32>) {
+    /// Add an authorized Oracle provider to the registry.
+    /// Only the admin may call this function.
+    pub fn add_provider(env: Env, provider: BytesN<32>) -> Result<(), VerificationError> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(VerificationError::Unauthorized)?;
+        admin.require_auth();
+
         env.storage().persistent().set(&DataKey::Provider(provider.clone()), &true);
         #[allow(deprecated)]
         env.events().publish(
@@ -130,10 +163,20 @@ impl Registry {
                 provider: provider.clone(),
             },
         );
+
+        Ok(())
     }
 
-    /// Setup helper: Remove a provider
-    pub fn remove_provider(env: Env, provider: BytesN<32>) {
+    /// Remove an Oracle provider from the registry.
+    /// Only the admin may call this function.
+    pub fn remove_provider(env: Env, provider: BytesN<32>) -> Result<(), VerificationError> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(VerificationError::Unauthorized)?;
+        admin.require_auth();
+
         env.storage().persistent().remove(&DataKey::Provider(provider.clone()));
         #[allow(deprecated)]
         env.events().publish(
@@ -146,22 +189,8 @@ impl Registry {
                 provider: provider.clone(),
             },
         );
-    }
 
-    /// Setup helper: Remove a TEE hash (admin-gated via require_auth on stored admin)
-    pub fn remove_tee_hash(env: Env, hash: BytesN<32>) {
-        env.storage().persistent().remove(&DataKey::TeeHash(hash.clone()));
-        #[allow(deprecated)]
-        env.events().publish(
-            (
-                soroban_sdk::Symbol::new(&env, "registry"),
-                soroban_sdk::Symbol::new(&env, "TeeHashRemoved"),
-                hash.clone(),
-            ),
-            TeeHashEventData {
-                hash: hash.clone(),
-            },
-        );
+        Ok(())
     }
 
     /// Setup helper: Create a pending request
