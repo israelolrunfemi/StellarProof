@@ -47,35 +47,55 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!saved) return;
-    walletService.getAddress().then((address) => {
-      if (address && address === saved) {
-        setPublicKey(saved);
-        setIsConnected(true);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
+    let cancelled = false;
+
+    async function autoConnect() {
+      const isStoredConnected = typeof window !== "undefined" ? localStorage.getItem("walletConnected") === "true" : false;
+      if (!isStoredConnected) return;
+
+      setIsConnecting(true);
+
+      try {
+        const installed = await walletService.isInstalled();
+        if (!installed) {
+          if (!cancelled) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+          return;
+        }
+
+        const address = await walletService.getAddress();
+        if (!cancelled) {
+          if (address) {
+            setPublicKey(address);
+            setIsConnected(true);
+            localStorage.setItem(STORAGE_KEY, address);
+            localStorage.setItem("walletConnected", "true");
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem("walletConnected");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConnecting(false);
+        }
       }
-    });
+    }
+
+    autoConnect();
+
+    return () => {
+      cancelled = true;
+    };
   }, [mounted]);
 
-            const { address, error } = await requestAccess();
-            if (error) {
-                throw new Error(error);
-            }
-            if (address) {
-                setPublicKey(address);
-                setIsConnected(true);
-                localStorage.setItem("freighter_public_key", address);
-            }
-        } catch (err: unknown) {
-            console.error(err);
-            const errorMessage = err instanceof Error ? err.message : "";
-            if (errorMessage.includes("User declined")) {
-                alert("Connection request was rejected by the user.");
-            } else {
-                alert("An error occurred while connecting to Freighter.");
-            }
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -100,6 +120,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setConnectError(null);
         if (typeof window !== "undefined") {
           localStorage.setItem(STORAGE_KEY, result.address);
+          localStorage.setItem("walletConnected", "true");
         }
       }
     } catch (err) {
@@ -114,7 +135,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     setIsConnected(false);
     setConnectError(null);
-    if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("walletConnected");
+    }
   }, []);
 
   const signTx = useCallback(async (_xdr: string): Promise<string> => {
