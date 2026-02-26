@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
+use soroban_sdk::{testutils::storage::Temporary as _, testutils::Address as _, Address, BytesN, Env};
 
 #[test]
 fn test_init() {
@@ -13,6 +13,82 @@ fn test_init() {
     let provenance = Address::generate(&env);
 
     client.init(&registry, &provenance);
+}
+
+#[test]
+fn test_submit_request_stores_pending_in_temporary_storage() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    // Initialization not strictly required for submit_request, but keep setup consistent.
+    let registry = Address::generate(&env);
+    let provenance = Address::generate(&env);
+    client.init(&registry, &provenance);
+
+    let content_hash = BytesN::from_array(&env, &[5; 32]);
+
+    let request_id = client.submit_request(&content_hash);
+    assert_eq!(request_id, 1);
+
+    // Verify the request is stored in temporary storage with Pending state.
+    let key = DataKey::Request(request_id);
+    // Access storage from the contract's context.
+    let (stored, ttl) = env.as_contract(&contract_id, || {
+        let stored: VerificationRequest = env
+            .storage()
+            .temporary()
+            .get(&key)
+            .expect("request must be stored");
+        let ttl = env.storage().temporary().get_ttl(&key);
+        (stored, ttl)
+    });
+
+    assert_eq!(stored.id, request_id);
+    assert_eq!(stored.content_hash, content_hash);
+    assert!(matches!(stored.state, RequestState::Pending));
+
+    // TTL should be positive, indicating the entry is tracked in temporary storage.
+    assert!(ttl > 0);
+}
+
+#[test]
+fn test_submit_request_generates_unique_ids() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let registry = Address::generate(&env);
+    let provenance = Address::generate(&env);
+    client.init(&registry, &provenance);
+
+    let hash1 = BytesN::from_array(&env, &[1; 32]);
+    let hash2 = BytesN::from_array(&env, &[2; 32]);
+
+    let id1 = client.submit_request(&hash1);
+    let id2 = client.submit_request(&hash2);
+
+    assert_eq!(id1, 1);
+    assert_eq!(id2, 2);
+
+    let key1 = DataKey::Request(id1);
+    let key2 = DataKey::Request(id2);
+
+    // Access storage from the contract's context.
+    let (req1, req2) = env.as_contract(&contract_id, || {
+        let req1: VerificationRequest = env.storage().temporary().get(&key1).unwrap();
+        let req2: VerificationRequest = env.storage().temporary().get(&key2).unwrap();
+        (req1, req2)
+    });
+
+    assert_eq!(req1.id, id1);
+    assert_eq!(req2.id, id2);
+    assert_eq!(req1.content_hash, hash1);
+    assert_eq!(req2.content_hash, hash2);
 }
 
 #[test]
