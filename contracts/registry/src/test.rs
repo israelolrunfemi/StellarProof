@@ -31,7 +31,7 @@ fn setup(env: &Env) -> (RegistryClient, Address) {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(env, &contract_id);
     let admin = Address::generate(env);
-    client.initialize(&admin);
+    client.init(&admin);
     (client, admin)
 }
 
@@ -348,9 +348,25 @@ fn test_initialize_sets_admin() {
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
 
-    client.initialize(&admin);
+    client.init(&admin);
 
     assert_eq!(client.get_admin(), Some(admin));
+}
+
+/// Calling init twice must panic.
+#[test]
+#[should_panic(expected = "Already initialized")]
+fn test_already_initialized_fails() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(Registry, ());
+    let client = RegistryClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+
+    client.init(&admin);
+    // This second call should panic
+    client.init(&admin);
 }
 
 /// Calling add_tee_hash before initialize (no admin set) must return Unauthorized.
@@ -380,9 +396,9 @@ fn test_add_tee_hash_non_admin_panics() {
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
 
-    // initialize doesn't require auth itself, so mock only for that call.
+    // init doesn't require auth itself, so mock only for that call.
     env.mock_all_auths();
-    client.initialize(&admin);
+    client.init(&admin);
     // Drop all mocked auths so the next call has no auth context.
     env.mock_auths(&[]);
 
