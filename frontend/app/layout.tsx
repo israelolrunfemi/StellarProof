@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 import "./globals.css";
+import { WalletProvider } from "../context/WalletContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const geistSans = Geist({
@@ -24,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -32,13 +35,13 @@ export default function RootLayout({
               (function() {
                 try {
                   var stored = localStorage.getItem('stellarproof-theme');
-                  if (stored === 'light') {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.dataset.theme = 'light';
-                  } else {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.dataset.theme = 'dark';
+                  if (!stored) {
+                    stored = 'dark';
+                    localStorage.setItem('stellarproof-theme', stored);
                   }
+                  var isDark = stored !== 'light';
+                  document.documentElement.classList.toggle('dark', isDark);
+                  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
                 } catch(e) {}
               })();
             `,
@@ -48,7 +51,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <WalletProvider>
+            {children}
+            <Footer />
+            <ScrollToTop />
+          </WalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

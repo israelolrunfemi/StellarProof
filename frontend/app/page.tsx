@@ -1,98 +1,27 @@
+import { Suspense } from "react";
 import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
 import About from "@/components/About";
-import HeroSection  from "@/components/HeroSection";
+import HowItWorks from "@/components/HowItWorks";
+import Ecosystem from "@/components/Ecosystem";
+import CallToAction from "@/components/CallToAction";
+import ManifestModalTrigger from "@/components/manifest/ManifestModalTrigger";
 
 export default function Home() {
   return (
-    <div className="min-h-screen font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#020617] font-sans selection:bg-primary/30">
       <Header />
-     
       <main className="w-full">
-        <section
-          id="home"
-          // className="flex min-h-[80vh] flex-col items-center justify-center px-4 py-24 text-center sm:px-6 lg:px-8"
-          aria-label="Home"
-        >
-          <HeroSection />
-          {/* <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl dark:text-white">
-            StellarProoffff
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-foreground/80 dark:text-white/80">
-            Web3 authenticity and blockchain verification.
-          </p> */}
-        </section>
+        <HeroSection />
         <About />
-        <section
-          id="creator"
-          className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
-          aria-label="Creator"
-        >
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold text-foreground dark:text-white">
-              Creator
-            </h2>
-            <p className="mt-4 text-foreground/80 dark:text-white/80">
-              Creator ecosystem content.
-            </p>
-          </div>
-        </section>
-        <section
-          id="developer"
-          className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
-          aria-label="Developer"
-        >
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold text-foreground dark:text-white">
-              Developer
-            </h2>
-            <p className="mt-4 text-foreground/80 dark:text-white/80">
-              Developer ecosystem content.
-            </p>
-          </div>
-        </section>
-        <section
-          id="assets"
-          className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
-          aria-label="Assets"
-        >
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold text-foreground dark:text-white">
-              Assets
-            </h2>
-            <p className="mt-4 text-foreground/80 dark:text-white/80">
-              Assets instances content.
-            </p>
-          </div>
-        </section>
-        <section
-          id="use-cases"
-          className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
-          aria-label="Use Cases"
-        >
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold text-foreground dark:text-white">
-              Use Cases
-            </h2>
-            <p className="mt-4 text-foreground/80 dark:text-white/80">
-              Use cases content.
-            </p>
-          </div>
-        </section>
-        <section
-          id="pricing"
-          className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8"
-          aria-label="Pricing"
-        >
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold text-foreground dark:text-white">
-              Pricing
-            </h2>
-            <p className="mt-4 text-foreground/80 dark:text-white/80">
-              Pricing content.
-            </p>
-          </div>
-        </section>
+        <HowItWorks />
+        <Suspense fallback={<div className="h-96" />}>
+          <ManifestModalTrigger />
+        </Suspense>
+        <Ecosystem />
+        <CallToAction />
       </main>
     </div>
   );
 }
+
