@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -13,7 +13,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -106,8 +105,6 @@ export default function KeyValueBuilder({
 }: KeyValueBuilderProps) {
   const {
     control,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<KeyValueBuilderFormValues>({
     defaultValues: {
@@ -124,7 +121,7 @@ export default function KeyValueBuilder({
     name: "entries",
   });
 
-  const watchedEntries = watch("entries");
+  const watchedEntries = useWatch({ control, name: "entries", defaultValue: [] });
 
   const emitChange = useCallback(() => {
     if (!onChange || !watchedEntries) return;
