@@ -1,6 +1,8 @@
 "use client";
 
-import { useTheme } from "@/app/context/ThemeContext";
+// import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "../app/context/ThemeContext";
+
 
 // import { ThemeProvider } from './context/ThemeContext';
 import { Github, Twitter, Send, DiscIcon } from "lucide-react";

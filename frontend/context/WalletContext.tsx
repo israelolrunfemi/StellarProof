@@ -8,7 +8,9 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { walletService } from "@/services/wallet";
+// import { walletService } from "@/services/wallet";
+import { walletService } from "../services/wallet";
+
 
 const STORAGE_KEY = "freighter_public_key";
 

@@ -32,7 +32,6 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLPreElement>(null);
 
-  // Derive output and error in one pure step
   const { formattedOutput, error } = useMemo(() => {
     if (!manifestData || Object.keys(manifestData).length === 0) {
       return { 

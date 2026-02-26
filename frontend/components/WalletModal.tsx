@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Copy, LogOut, ExternalLink, Loader2, ChevronDown, Wallet } from "lucide-react";
-import { useWallet } from "@/context/WalletContext";
-import { FREIGHTER_INSTALL_URL } from "@/services/wallet";
+// import { useWallet } from "@/context/WalletContext";
+// import { FREIGHTER_INSTALL_URL } from "@/services/wallet";
+import { useWallet } from "../context/WalletContext";
+import { FREIGHTER_INSTALL_URL } from "../services/wallet";
 import { motion, AnimatePresence } from "framer-motion";
 
 const btnBase =
