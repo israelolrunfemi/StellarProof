@@ -12,10 +12,28 @@ pub struct StellarProofContract;
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RequestState {
+    Pending,
+    Verified,
+    Rejected,
+    Failed,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VerificationRequest {
+    pub content_hash: String,
+    pub owner: Address,
+    pub state: RequestState,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VerificationResult {
     pub success: bool,
     pub content_hash: String,
     pub certificate_id: Option<u64>,
+    pub state: RequestState,
 }
 
 #[contractimpl]
@@ -50,6 +68,7 @@ impl StellarProofContract {
                 success: false,
                 content_hash: computed_hash_string,
                 certificate_id: None,
+                state: RequestState::Rejected,
             };
         }
         
@@ -61,6 +80,7 @@ impl StellarProofContract {
                 success: true,
                 content_hash: computed_hash_string,
                 certificate_id: Some(cert_id),
+                state: RequestState::Verified,
             },
             Err(_) => {
                 // Minting failed but verification succeeded
@@ -69,6 +89,7 @@ impl StellarProofContract {
                     success: true,
                     content_hash: computed_hash_string,
                     certificate_id: None,
+                    state: RequestState::Failed,
                 }
             }
         }

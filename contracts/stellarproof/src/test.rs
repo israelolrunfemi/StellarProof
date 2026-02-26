@@ -4,6 +4,16 @@ use super::*;
 use soroban_sdk::{testutils::Address as _, Address, Env, String};
 
 #[test]
+fn test_request_state_roundtrip_storage() {
+    let env = Env::default();
+    let state = RequestState::Pending;
+    env.storage().persistent().set(&1u32, &state);
+
+    let loaded: RequestState = env.storage().persistent().get(&1u32).unwrap();
+    assert_eq!(loaded, RequestState::Pending);
+}
+
+#[test]
 fn test_compute_hash() {
     let env = Env::default();
     let contract_id = env.register(StellarProofContract, ());
@@ -17,6 +27,7 @@ fn test_compute_hash() {
     // Should fail verification with wrong hash
     assert!(!result.success);
     assert!(result.certificate_id.is_none());
+    assert_eq!(result.state, RequestState::Rejected);
     
     // The computed hash should be a 16-character hex string
     assert_eq!(result.content_hash.len(), 16);
@@ -45,6 +56,7 @@ fn test_verify_success() {
     assert_eq!(result2.content_hash, correct_hash);
     // Certificate ID will be None since provenance contract is not initialized
     assert!(result2.certificate_id.is_none());
+    assert_eq!(result2.state, RequestState::Failed);
 }
 
 #[test]
@@ -65,6 +77,7 @@ fn test_verify_failure() {
     // Verification should fail
     assert!(!result.success);
     assert!(result.certificate_id.is_none());
+    assert_eq!(result.state, RequestState::Rejected);
 }
 
 #[test]
