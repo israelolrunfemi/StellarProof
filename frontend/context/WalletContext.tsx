@@ -77,7 +77,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem("walletConnected");
           }
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           localStorage.removeItem(STORAGE_KEY);
           localStorage.removeItem("walletConnected");
