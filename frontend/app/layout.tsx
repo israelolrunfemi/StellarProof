@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import "./globals.css";
 import { WalletProvider } from "../context/WalletContext";
 import { ThemeProvider } from "./context/ThemeContext";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "StellarProof",
@@ -49,7 +38,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
+        className="antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300"
       >
         <ThemeProvider>
           <WalletProvider>

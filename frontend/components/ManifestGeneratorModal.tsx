@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, FileText, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ManifestUseCase } from "@/services/manifestUseCases";
+import KeyValueBuilder from "@/components/KeyValueBuilder";
+import {
+  type ManifestKeyRow,
+  useDuplicateKeyValidation,
+} from "@/utils/manifestValidation";
 
 interface Props {
   open: boolean;
@@ -11,32 +16,40 @@ interface Props {
   onClose: () => void;
 }
 
-function FieldLabel({ label }: { label: string }) {
-  const formatted = label
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (s) => s.toUpperCase());
-  return (
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-      {formatted}
-    </label>
-  );
-}
-
 export default function ManifestGeneratorModal({ open, useCase, onClose }: Props) {
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [rows, setRows] = useState<ManifestKeyRow[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleChange(field: string, value: string) {
-    setFieldValues((prev) => ({ ...prev, [field]: value }));
-  }
+  const { errors: keyErrors, hasDuplicates } = useDuplicateKeyValidation(rows);
+
+  useEffect(() => {
+    if (!open || !useCase) return;
+    setRows(
+      useCase.template.fields.map((field, index) => ({
+        id: `${useCase.id}-${index}`,
+        key: field,
+        value: "",
+      })),
+    );
+  }, [open, useCase]);
+
+  const handleRowChange = useCallback(
+    (id: string, field: "key" | "value", value: string) => {
+      setRows((prev) =>
+        prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+      );
+    },
+    [],
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (hasDuplicates) return;
     setSubmitted(true);
   }
 
   function handleClose() {
-    setFieldValues({});
+    setRows([]);
     setSubmitted(false);
     onClose();
   }
@@ -139,20 +152,7 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                       Fill in the fields below to generate your manifest. All data is processed
                       client-side; nothing is sent to a server until you anchor.
                     </p>
-                    {useCase.template.fields.map((field) => (
-                      <div key={field}>
-                        <FieldLabel label={field} />
-                        <input
-                          type="text"
-                          id={`field-${field}`}
-                          name={field}
-                          value={fieldValues[field] ?? ""}
-                          onChange={(e) => handleChange(field, e.target.value)}
-                          placeholder={`Enter ${field.replace(/([A-Z])/g, " $1").toLowerCase()}…`}
-                          className="w-full rounded-lg border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
-                        />
-                      </div>
-                    ))}
+                    <KeyValueBuilder rows={rows} errors={keyErrors} onChange={handleRowChange} />
 
                     <div className="flex gap-3 pt-2">
                       <button
@@ -164,7 +164,12 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow hover:shadow-glow transition"
+                        disabled={hasDuplicates}
+                        className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow transition ${
+                          hasDuplicates
+                            ? "bg-gray-400 cursor-not-allowed shadow-none"
+                            : "bg-primary hover:shadow-glow"
+                        }`}
                       >
                         Generate Manifest
                       </button>
