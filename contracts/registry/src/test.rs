@@ -2,10 +2,10 @@
 extern crate std;
 
 use super::*;
-use soroban_sdk::{Address, BytesN, Env};
 use ed25519_dalek::{Signer, SigningKey};
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::testutils::Address as _;
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{Address, BytesN, Env};
 
 fn create_keypair(env: &Env, seed: u8) -> (SigningKey, BytesN<32>) {
     let secret = [seed; 32];
@@ -144,10 +144,19 @@ fn test_unauthorized_provider() {
     let signature = sign_payload(&env, &signing_key, payload_slice);
 
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "Unauthorized"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized"))
+    );
 }
 
 #[test]
@@ -181,10 +190,19 @@ fn test_invalid_tee_hash() {
     let signature = sign_payload(&env, &signing_key, payload_slice);
 
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "InvalidTeeHash"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash"))
+    );
 }
 
 #[test]
@@ -220,10 +238,19 @@ fn test_invalid_attestation() {
 
     // Call with id 1, but attestation has id 2
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "InvalidAttestation"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation"))
+    );
 }
 
 #[test]
@@ -415,4 +442,76 @@ fn test_add_tee_hash_multiple_hashes() {
     // An unregistered hash must not be present.
     let hash_unknown = BytesN::from_array(&env, &[0xFF; 32]);
     assert!(!client.has_tee_hash(&hash_unknown));
+}
+
+// ---------------------------------------------------------------------------
+// New: is_verified read-only function tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_is_verified_both_valid() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+
+    let (_, provider_pk) = create_keypair(&env, 1);
+    let hash = BytesN::from_array(&env, &[88; 32]);
+
+    client.add_provider(&provider_pk);
+    client.add_tee_hash(&hash);
+
+    assert!(client.is_verified(&hash, &provider_pk));
+}
+
+#[test]
+fn test_is_verified_invalid_hash() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+
+    let (_, provider_pk) = create_keypair(&env, 1);
+    let valid_hash = BytesN::from_array(&env, &[88; 32]);
+    let invalid_hash = BytesN::from_array(&env, &[99; 32]);
+
+    client.add_provider(&provider_pk);
+    client.add_tee_hash(&valid_hash);
+
+    assert!(!client.is_verified(&invalid_hash, &provider_pk));
+}
+
+#[test]
+fn test_is_verified_invalid_provider() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+
+    let (_, provider_pk) = create_keypair(&env, 1);
+    let (_, invalid_provider_pk) = create_keypair(&env, 2);
+    let hash = BytesN::from_array(&env, &[88; 32]);
+
+    client.add_provider(&provider_pk);
+    client.add_tee_hash(&hash);
+
+    assert!(!client.is_verified(&hash, &invalid_provider_pk));
+}
+
+#[test]
+fn test_is_verified_both_invalid() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+
+    let (_, provider_pk) = create_keypair(&env, 1);
+    let (_, invalid_provider_pk) = create_keypair(&env, 2);
+    let hash = BytesN::from_array(&env, &[88; 32]);
+    let invalid_hash = BytesN::from_array(&env, &[99; 32]);
+
+    client.add_provider(&provider_pk);
+    client.add_tee_hash(&hash);
+
+    assert!(!client.is_verified(&invalid_hash, &invalid_provider_pk));
 }

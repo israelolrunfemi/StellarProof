@@ -267,6 +267,24 @@ impl Registry {
 
         Ok(req.state)
     }
+
+    /// Read-only function to verify if a hash and provider are trusted.
+    /// Returns true only if both the TEE hash and the provider are authorized.
+    pub fn is_verified(env: Env, hash: BytesN<32>, provider: BytesN<32>) -> bool {
+        let is_tee_authorized = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TeeHash(hash))
+            .unwrap_or(false);
+
+        let is_auth_provider = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Provider(provider))
+            .unwrap_or(false);
+
+        is_tee_authorized && is_auth_provider
+    }
 }
 
 #[cfg(test)]
