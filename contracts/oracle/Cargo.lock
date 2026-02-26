@@ -919,6 +919,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 name = "oracle"
 version = "0.1.0"
 dependencies = [
+ "registry",
  "soroban-sdk",
 ]
 
@@ -1050,6 +1051,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "registry"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]
