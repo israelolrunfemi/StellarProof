@@ -29,7 +29,7 @@ export interface ManifestData {
 
 export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }) => {
   const [format, setFormat] = useState<ManifestFormat>('json');
-  const [mounted, setMounted] = useState(false); // ✅ Fix for Hydration Error
+  const [mounted, setMounted] = useState(false); 
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLPreElement>(null);
 
