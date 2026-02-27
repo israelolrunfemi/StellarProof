@@ -11,8 +11,9 @@ fn test_init() {
 
     let registry = Address::generate(&env);
     let provenance = Address::generate(&env);
+    let admin = Address::generate(&env);
 
-    client.init(&registry, &provenance);
+    client.init(&registry, &provenance, &admin);
 }
 
 #[test]
@@ -24,9 +25,36 @@ fn test_init_already_initialized() {
 
     let registry = Address::generate(&env);
     let provenance = Address::generate(&env);
+    let admin = Address::generate(&env);
 
-    client.init(&registry, &provenance);
-    client.init(&registry, &provenance);
+    client.init(&registry, &provenance, &admin);
+    client.init(&registry, &provenance, &admin);
+}
+
+#[test]
+fn test_provider_management() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register(Contract, ());
+    let client = ContractClient::new(&env, &contract_id);
+
+    let registry = Address::generate(&env);
+    let provenance = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let provider = Address::generate(&env);
+
+    client.init(&registry, &provenance, &admin);
+
+    // Initially not a provider
+    assert!(!client.is_provider(&provider));
+
+    // Add provider
+    client.add_provider(&provider);
+    assert!(client.is_provider(&provider));
+
+    // Remove provider
+    client.remove_provider(&provider);
+    assert!(!client.is_provider(&provider));
 }
 
 use ed25519_dalek::{Signer, SigningKey};

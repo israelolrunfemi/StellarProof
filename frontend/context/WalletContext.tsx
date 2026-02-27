@@ -141,6 +141,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const signTx = useCallback(async (_xdr: string): Promise<string> => {
     return "";
   }, []);
