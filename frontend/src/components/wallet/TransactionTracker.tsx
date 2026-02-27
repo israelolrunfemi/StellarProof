@@ -53,7 +53,10 @@ function TransactionTrackerInner({
   }, [hash, addToast, onStatusChange]);
 
   useEffect(() => {
-    poll();
+    // Schedule initial poll asynchronously to avoid setState in effect
+    const initialPoll = setTimeout(() => {
+      poll();
+    }, 0);
 
     const interval = setInterval(() => {
       if (!stopped.current) poll();
@@ -69,6 +72,7 @@ function TransactionTrackerInner({
 
     return () => {
       stopped.current = true;
+      clearTimeout(initialPoll);
       clearInterval(interval);
       clearTimeout(timeout);
     };
