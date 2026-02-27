@@ -4,8 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useTheme } from "@/app/context/ThemeContext";
 import { useWallet } from "@/context/WalletContext";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/app/context/ToastContext";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface FormInputs {
   category: string;
@@ -35,7 +37,7 @@ function detectNetwork(): string {
 export default function ReportIssuePage() {
   const { theme } = useTheme();
   const { publicKey } = useWallet();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   const isDark = theme === "dark";
 
@@ -59,6 +61,9 @@ export default function ReportIssuePage() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
     null,
   );
+  
+  // React Hook Form's watch function is not stable and can trigger re-renders or memoization issues.
+  // We're capturing the specific field value here.
   const screenshotFiles = watch("screenshot");
 
   // Initialize wallet and network
@@ -79,6 +84,8 @@ export default function ReportIssuePage() {
     } else {
       setScreenshotPreview(null);
     }
+    // We intentionally depend on screenshotFiles here.
+     
   }, [screenshotFiles]);
 
   // Remove screenshot
@@ -87,12 +94,14 @@ export default function ReportIssuePage() {
   };
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _data = data;
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Mock success response
-      showToast(
+      addToast(
         "Issue reported successfully. Thank you for your feedback!",
         "success",
       );
@@ -106,7 +115,9 @@ export default function ReportIssuePage() {
       });
       setScreenshotPreview(null);
     } catch (error) {
-      showToast("Failed to submit issue. Please try again.", "error");
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _error = error;
+      addToast("Failed to submit issue. Please try again.", "error");
     }
   };
 
@@ -118,7 +129,7 @@ export default function ReportIssuePage() {
     >
       <div className="max-w-3xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <a
+        <Link
           href="/"
           className={`inline-flex items-center gap-2 mb-6 ${
             isDark
@@ -128,7 +139,7 @@ export default function ReportIssuePage() {
         >
           <ArrowLeft size={20} />
           <span className="text-sm font-medium">Back to Home</span>
-        </a>
+        </Link>
 
         {/* Form Container */}
         <div
@@ -306,10 +317,12 @@ export default function ReportIssuePage() {
               {screenshotPreview && (
                 <div className="mt-4">
                   <div className="relative inline-block">
-                    <img
+                    <Image
                       src={screenshotPreview}
                       alt="Preview"
-                      className="max-h-48 rounded-md"
+                      width={192}
+                      height={192}
+                      className="max-h-48 rounded-md object-contain"
                     />
                     <button
                       type="button"

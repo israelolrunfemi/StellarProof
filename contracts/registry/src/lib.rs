@@ -14,6 +14,7 @@ pub enum VerificationError {
     InvalidAttestation = 4,
     AlreadyProcessed = 5,
     InvalidTeeHash = 6,
+    DuplicateHash = 7,
 }
 
 #[contracttype]
@@ -66,25 +67,40 @@ pub struct Registry;
 impl Registry {
     /// Initialize the contract with an admin address.
     /// Must be called once before any admin-gated operations.
-    pub fn initialize(env: Env, admin: Address) {
-        env.storage().persistent().set(&DataKey::Admin, &admin);
+    pub fn init(env: Env, admin: Address) {
+        if env.storage().instance().has(&DataKey::Admin) {
+            panic!("Already initialized");
+        }
+        env.storage().instance().set(&DataKey::Admin, &admin);
     }
 
     /// Return the stored admin address, if any.
     pub fn get_admin(env: Env) -> Option<Address> {
-        env.storage().persistent().get(&DataKey::Admin)
+        env.storage().instance().get(&DataKey::Admin)
     }
 
     /// Add a trusted TEE measurement hash to the registry.
     /// Only the admin may call this function.
     /// Emits a `TeeHashAdded` event on success.
+    /// Returns `DuplicateHash` error if the hash already exists.
     pub fn add_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
         let admin: Address = env
             .storage()
-            .persistent()
+            .instance()
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
         admin.require_auth();
+
+        // Check if hash already exists
+        let exists: bool = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TeeHash(hash.clone()))
+            .unwrap_or(false);
+
+        if exists {
+            return Err(VerificationError::DuplicateHash);
+        }
 
         env.storage()
             .persistent()
@@ -108,7 +124,7 @@ impl Registry {
     pub fn remove_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
         let admin: Address = env
             .storage()
-            .persistent()
+            .instance()
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
         admin.require_auth();
@@ -143,7 +159,7 @@ impl Registry {
     pub fn add_provider(env: Env, provider: BytesN<32>) -> Result<(), VerificationError> {
         let admin: Address = env
             .storage()
-            .persistent()
+            .instance()
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
         admin.require_auth();
@@ -169,7 +185,7 @@ impl Registry {
     pub fn remove_provider(env: Env, provider: BytesN<32>) -> Result<(), VerificationError> {
         let admin: Address = env
             .storage()
-            .persistent()
+            .instance()
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
         admin.require_auth();

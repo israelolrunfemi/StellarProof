@@ -59,23 +59,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   }, [mounted]);
 
-            const { address, error } = await requestAccess();
-            if (error) {
-                throw new Error(error);
-            }
-            if (address) {
-                setPublicKey(address);
-                setIsConnected(true);
-                localStorage.setItem("freighter_public_key", address);
-            }
-        } catch (err: unknown) {
-            console.error(err);
-            const errorMessage = err instanceof Error ? err.message : "";
-            if (errorMessage.includes("User declined")) {
-                alert("Connection request was rejected by the user.");
-            } else {
-                alert("An error occurred while connecting to Freighter.");
-            }
+
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -117,6 +101,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const signTx = useCallback(async (_xdr: string): Promise<string> => {
     return "";
   }, []);
