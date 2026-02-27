@@ -17,7 +17,7 @@ fn test_init() {
 }
 
 #[test]
-#[should_panic(expected = "already initialized")]
+#[should_panic(expected = "Error(Contract, #3)")]
 fn test_init_already_initialized() {
     let env = Env::default();
     let contract_id = env.register(Contract, ());
@@ -111,7 +111,8 @@ fn test_verify_attestation_success() {
     let registry_id = env.register(RegistryMock, ());
 
     let provenance = Address::generate(&env);
-    client.init(&registry_id, &provenance);
+    let admin = Address::generate(&env);
+    client.init(&registry_id, &provenance, &admin);
 
     let (signing_key, provider_pk) = create_keypair(&env, 1);
     let tee_hash = BytesN::from_array(&env, &[88; 32]); // 88 triggers true in mock
@@ -132,7 +133,8 @@ fn test_verify_attestation_unauthorized_signer() {
 
     let registry_id = env.register(RegistryMock, ());
     let provenance = Address::generate(&env);
-    client.init(&registry_id, &provenance);
+    let admin = Address::generate(&env);
+    client.init(&registry_id, &provenance, &admin);
 
     let (signing_key, provider_pk) = create_keypair(&env, 1);
     let tee_hash = BytesN::from_array(&env, &[99; 32]); // 99 triggers false in mock
@@ -154,7 +156,8 @@ fn test_verify_attestation_invalid_signature() {
 
     let registry_id = env.register(RegistryMock, ());
     let provenance = Address::generate(&env);
-    client.init(&registry_id, &provenance);
+    let admin = Address::generate(&env);
+    client.init(&registry_id, &provenance, &admin);
 
     let (_, provider_pk) = create_keypair(&env, 1);
     let (other_signing_key, _) = create_keypair(&env, 2);

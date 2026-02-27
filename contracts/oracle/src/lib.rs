@@ -1,3 +1,5 @@
+#![no_std]
+
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
 };
@@ -16,6 +18,7 @@ pub enum DataKey {
 pub enum Error {
     NotInitialized = 1,
     UnauthorizedSigner = 2,
+    AlreadyInitialized = 3,
 }
 
 #[contract]
@@ -23,15 +26,16 @@ pub struct Contract;
 
 #[contractimpl]
 impl Contract {
-    pub fn init(env: Env, registry: Address, provenance: Address, admin: Address) {
+    pub fn init(env: Env, registry: Address, provenance: Address, admin: Address) -> Result<(), Error> {
         if env.storage().instance().has(&DataKey::Registry) {
-            panic!("already initialized");
+            return Err(Error::AlreadyInitialized);
         }
         env.storage().instance().set(&DataKey::Registry, &registry);
         env.storage()
             .instance()
             .set(&DataKey::Provenance, &provenance);
         env.storage().instance().set(&DataKey::Admin, &admin);
+        Ok(())
     }
 
     pub fn add_provider(env: Env, provider: Address) {
