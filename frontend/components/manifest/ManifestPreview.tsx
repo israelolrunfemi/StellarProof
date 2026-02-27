@@ -29,18 +29,16 @@ export interface ManifestData {
 
 export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }) => {
   const [format, setFormat] = useState<ManifestFormat>('json');
-  const [mounted, setMounted] = useState(false); 
+  const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLPreElement>(null);
 
-  // 1. Prevent Server/Client Mismatch
-  // 1. Prevent Server/Client Mismatch with Deferred Update
+  // 1. Resolve Hydration & Linter Error
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
     }, 0);
-
-    return () => clearTimeout(timer); // Clean up to prevent memory leaks
+    return () => clearTimeout(timer);
   }, []);
 
   const { formattedOutput, error } = useMemo(() => {
@@ -88,7 +86,7 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!mounted) return null; // ✅ Prevents "Tree Hydrated" error
+  if (!mounted) return null;
 
   const langClass = format === 'json' ? 'language-json' : 'language-markup';
 
@@ -114,7 +112,6 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
             className={`p-1.5 rounded-md transition-all active:scale-95 ${
               error ? 'opacity-20 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-700'
             }`}
-            title="Copy to clipboard"
           >
             {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardDocumentIcon className="w-4 h-4" />}
           </button>
@@ -126,7 +123,6 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
           <div className="flex flex-col items-center justify-center w-full h-full p-8 text-center bg-[#0d1117]">
              <ExclamationTriangleIcon className="w-10 h-10 text-amber-500 mb-3 opacity-80" />
              <h3 className="text-gray-200 font-semibold">Preview Unavailable</h3>
-             <p className="mt-1 text-gray-500 text-xs max-w-[250px]">{error}</p>
           </div>
         ) : (
           <>
