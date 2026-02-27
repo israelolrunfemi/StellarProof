@@ -35,14 +35,14 @@ function classifyError(error: unknown): WalletErrorType {
   return WalletErrorType.UNKNOWN;
 }
 
-export function handleWalletError(error: unknown, showToast: (msg: string, variant: 'error') => void): WalletErrorType {
+export function handleWalletError(error: unknown, addToast: (msg: string, type: 'error') => void): WalletErrorType {
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') console.error('[WalletError]', error);
   const type = classifyError(error);
-  showToast(ERROR_MESSAGES[type], 'error');
+  addToast(ERROR_MESSAGES[type], 'error');
   return type;
 }
 
 export function useWalletError() {
-  const { showToast } = useToast();
-  return (error: unknown) => handleWalletError(error, showToast);
+  const { addToast } = useToast();
+  return (error: unknown) => handleWalletError(error, addToast);
 }
