@@ -29,8 +29,19 @@ export interface ManifestData {
 
 export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }) => {
   const [format, setFormat] = useState<ManifestFormat>('json');
+  const [mounted, setMounted] = useState(false); // ✅ Fix for Hydration Error
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLPreElement>(null);
+
+  // 1. Prevent Server/Client Mismatch
+  // 1. Prevent Server/Client Mismatch with Deferred Update
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+
+    return () => clearTimeout(timer); // Clean up to prevent memory leaks
+  }, []);
 
   const { formattedOutput, error } = useMemo(() => {
     if (!manifestData || Object.keys(manifestData).length === 0) {
@@ -62,13 +73,13 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
   }, [manifestData, format]);
 
   useEffect(() => {
-    if (!error) {
+    if (mounted && !error) {
       Prism.highlightAll();
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     }
-  }, [formattedOutput, format, error]);
+  }, [formattedOutput, format, error, mounted]);
 
   const handleCopy = async () => {
     if (error) return;
@@ -77,11 +88,12 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Extracted to avoid ESLint JSX parsing bugs
+  if (!mounted) return null; // ✅ Prevents "Tree Hydrated" error
+
   const langClass = format === 'json' ? 'language-json' : 'language-markup';
 
   return (
-    <div className="flex flex-col h-[500px] bg-[#0d1117] border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[500px] bg-[#0d1117] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
       <div className="flex justify-between items-center p-3 bg-[#161b22] border-b border-gray-800">
         <div className="flex items-center gap-2">
            <div className="flex gap-1.5 px-2">
@@ -89,7 +101,10 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
            </div>
-           <span className="text-[11px] font-mono text-gray-500 italic uppercase">preview.{format}</span>
+           {/* Sharp Technical Typography */}
+           <span className="text-[10px] font-mono text-gray-400 font-bold tracking-[0.25em] uppercase leading-none">
+             preview.{format}
+           </span>
         </div>
         <div className="flex items-center gap-3">
           <FormatToggle currentFormat={format} onFormatChange={setFormat} />
