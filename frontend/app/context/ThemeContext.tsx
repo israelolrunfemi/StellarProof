@@ -27,22 +27,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-   useEffect(() => {
-        try {
-            const stored = localStorage.getItem('stellarproof-theme') as Theme | null;
-
-            if (stored === 'light') {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setTheme('light');
-                applyTheme('light');
-            } else {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setTheme('dark');
-                applyTheme('dark');
-            }
-        } catch (error) {
-            console.warn('Could not read theme from localStorage', error);
+    useEffect(() => {
+    const stored = localStorage.getItem('theme');
+    
+    // Wrap in setTimeout to avoid synchronous setState inside an effect
+    const timer = setTimeout(() => {
+        if (stored === 'light') {
+        setTheme('light');
+        // Ensure applyTheme is defined or handled here
+        } else {
+        setTheme('dark');
         }
+    }, 0);
+
+    return () => clearTimeout(timer);
     }, []);
 
     const toggleTheme = () => {

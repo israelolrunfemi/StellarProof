@@ -15,7 +15,6 @@ export function WalletModal() {
   const {
     publicKey,
     isConnected,
-    isFreighterInstalled,
     isConnecting,
     connectError,
     connect,

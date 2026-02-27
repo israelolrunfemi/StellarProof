@@ -1,12 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
 import { useWizardStore } from '../../store/wizard.store';
 import {
   isValidAssetCode,
   isValidAmount,
+  isValidSHA256,
 } from '@/utils/validation';
-import { isValidSHA256 } from '@/utils/validation';
 
 export default function StepDocuments() {
   const { formData, updateFormData, setStepValid } = useWizardStore();
@@ -16,14 +15,6 @@ export default function StepDocuments() {
     amount: '',
     proofHash: '',
   };
-
-  const isValid = useMemo(() => {
-    return (
-      isValidAssetCode(documents.assetCode) &&
-      isValidAmount(documents.amount) &&
-      isValidSHA256(documents.proofHash)
-    );
-  }, [documents]);
 
   const handleChange = (field: string, value: string) => {
     const updated = {
@@ -48,7 +39,7 @@ export default function StepDocuments() {
         value={documents.assetCode}
         onChange={(e) => handleChange('assetCode', e.target.value)}
         placeholder="Asset Code"
-        className="w-full rounded-lg border px-4 py-2"
+        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white"
       />
 
       <input
@@ -56,7 +47,7 @@ export default function StepDocuments() {
         value={documents.amount}
         onChange={(e) => handleChange('amount', e.target.value)}
         placeholder="Amount"
-        className="w-full rounded-lg border px-4 py-2"
+        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white"
       />
 
       <input
@@ -64,7 +55,7 @@ export default function StepDocuments() {
         value={documents.proofHash}
         onChange={(e) => handleChange('proofHash', e.target.value)}
         placeholder="SHA256 Proof Hash"
-        className="w-full rounded-lg border px-4 py-2"
+        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white"
       />
     </div>
   );

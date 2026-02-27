@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X, FileText, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { ManifestUseCase } from "@/services/manifestUseCases";
+import type { ManifestUseCase } from "../services/manifestUseCases";
 
 interface Props {
   open: boolean;

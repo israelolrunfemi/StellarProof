@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useWizardStore } from '../store/wizard.store';
 import WizardStepper from './WizardStepper';
 import WizardNavigation from './WizardNavigation';
@@ -21,8 +20,6 @@ export default function WizardPageShell() {
     validation,
     resetWizard,
   } = useWizardStore();
-
-  const [mounted, setMounted] = useState(false);
 
   // Hydration guard
  const hasHydrated = useWizardStore((state) => state._hasHydrated);

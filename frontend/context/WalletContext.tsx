@@ -102,7 +102,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  const signTx = useCallback(async (_xdr: string): Promise<string> => {
+  const signTx = useCallback(async (): Promise<string> => {
     return "";
   }, []);
 

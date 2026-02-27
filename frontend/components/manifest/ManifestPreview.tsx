@@ -77,6 +77,9 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Extracted to avoid ESLint JSX parsing bugs
+  const langClass = format === 'json' ? 'language-json' : 'language-markup';
+
   return (
     <div className="flex flex-col h-[500px] bg-[#0d1117] border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
       <div className="flex justify-between items-center p-3 bg-[#161b22] border-b border-gray-800">
@@ -120,10 +123,10 @@ export const ManifestPreview = ({ manifestData }: { manifestData: ManifestData }
 
             <pre 
               ref={scrollRef}
-              className={`flex-1 p-4 m-0 overflow-auto custom-scrollbar language-${format === 'json' ? 'json' : 'markup'}`}
+              className={`flex-1 p-4 m-0 overflow-auto custom-scrollbar ${langClass}`}
               style={{ backgroundColor: 'transparent' }}
             >
-              <code className={`language-${format === 'json' ? 'json' : 'markup'} leading-relaxed`}>
+              <code className={`${langClass} leading-relaxed`}>
                 {formattedOutput}
               </code>
             </pre>
