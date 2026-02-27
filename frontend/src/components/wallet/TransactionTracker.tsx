@@ -11,7 +11,6 @@ export interface TransactionTrackerProps {
   onStatusChange?: (status: TxStatus) => void;
 }
 
-const TERMINAL: TxStatus[] = ['CONFIRMED', 'FAILED'];
 const DEFAULT_INTERVAL = 5_000;
 const DEFAULT_TIMEOUT = 120_000;
 
@@ -28,6 +27,7 @@ export function TransactionTracker({
 
   const prevStatus = useRef<TxStatus | null>(null);
   const stopped = useRef(false);
+  const prevHash = useRef<string>(hash);
 
   const poll = useCallback(async () => {
     if (stopped.current) return;
@@ -54,11 +54,15 @@ export function TransactionTracker({
   }, [hash, addToast, onStatusChange]);
 
   useEffect(() => {
-    stopped.current = false;
-    prevStatus.current = null;
-    setStatus('PENDING');
-    setLedger(undefined);
-    setTimedOut(false);
+    // Reset state when hash changes
+    if (prevHash.current !== hash) {
+      stopped.current = false;
+      prevStatus.current = null;
+      prevHash.current = hash;
+      setStatus('PENDING');
+      setLedger(undefined);
+      setTimedOut(false);
+    }
 
     poll();
 
