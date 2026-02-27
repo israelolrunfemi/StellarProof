@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import "./globals.css";
 import { WalletProvider } from "../context/WalletContext";
+import { ToastProvider } from "./context/ToastContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const geistSans = Geist({
@@ -52,11 +53,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300`}
       >
         <ThemeProvider>
-          <WalletProvider>
-            {children}
-            <Footer />
-            <ScrollToTop />
-          </WalletProvider>
+          <ToastProvider>
+            <WalletProvider>
+              {children}
+              <Footer />
+              <ScrollToTop />
+            </WalletProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
