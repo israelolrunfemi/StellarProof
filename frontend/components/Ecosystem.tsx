@@ -18,10 +18,6 @@ interface EcosystemProps {
 export default function Ecosystem({ className = "" }: EcosystemProps) {
   const [mounted, setMounted] = useState(false);
 
-  /** * ✅ FIXED: Resolved merge conflict and applied the deferred state pattern.
-   * This satisfies the 'set-state-in-effect' lint rule by moving the update
-   * to the end of the execution queue.
-   */
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);

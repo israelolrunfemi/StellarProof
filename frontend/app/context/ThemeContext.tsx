@@ -30,11 +30,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
     const stored = localStorage.getItem('theme');
     
-    // Wrap in setTimeout to avoid synchronous setState inside an effect
     const timer = setTimeout(() => {
         if (stored === 'light') {
         setTheme('light');
-        // Ensure applyTheme is defined or handled here
         } else {
         setTheme('dark');
         }
@@ -42,6 +40,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     return () => clearTimeout(timer);
     }, []);
+
 
     const toggleTheme = () => {
         setTheme((prev) => {
