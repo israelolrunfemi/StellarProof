@@ -100,6 +100,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const signTx = useCallback(async (_xdr: string): Promise<string> => {
     return "";
   }, []);
