@@ -432,3 +432,129 @@ fn test_add_tee_hash_multiple_hashes() {
     let hash_unknown = BytesN::from_array(&env, &[0xFF; 32]);
     assert!(!client.has_tee_hash(&hash_unknown));
 }
+
+// ---------------------------------------------------------------------------
+// Duplicate hash prevention tests
+// ---------------------------------------------------------------------------
+
+/// Attempting to add the same hash twice must return DuplicateHash error.
+#[test]
+fn test_add_tee_hash_duplicate_returns_error() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+    let hash = BytesN::from_array(&env, &[42; 32]);
+
+    // First addition should succeed
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Ok(Ok(())));
+    assert!(client.has_tee_hash(&hash));
+
+    // Second addition of the same hash should fail with DuplicateHash
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+}
+
+/// Idempotent behavior: adding the same hash multiple times should consistently fail.
+#[test]
+fn test_add_tee_hash_idempotent_behavior() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+    let hash = BytesN::from_array(&env, &[99; 32]);
+
+    // First addition succeeds
+    client.add_tee_hash(&hash);
+    assert!(client.has_tee_hash(&hash));
+
+    // Multiple subsequent attempts should all fail with DuplicateHash
+    for _ in 0..3 {
+        let result = client.try_add_tee_hash(&hash);
+        assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+    }
+
+    // Hash should still be present and valid
+    assert!(client.has_tee_hash(&hash));
+}
+
+/// After removing a hash, it can be added again without duplicate error.
+#[test]
+fn test_add_tee_hash_after_removal() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+    let hash = BytesN::from_array(&env, &[77; 32]);
+
+    // Add hash
+    client.add_tee_hash(&hash);
+    assert!(client.has_tee_hash(&hash));
+
+    // Attempt to add again should fail
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+
+    // Remove hash
+    client.remove_tee_hash(&hash);
+    assert!(!client.has_tee_hash(&hash));
+
+    // Now adding the same hash should succeed
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Ok(Ok(())));
+    assert!(client.has_tee_hash(&hash));
+}
+
+/// Duplicate check should not affect different hashes.
+#[test]
+fn test_add_tee_hash_duplicate_check_independent() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+    let hash_a = BytesN::from_array(&env, &[0xAA; 32]);
+    let hash_b = BytesN::from_array(&env, &[0xBB; 32]);
+
+    // Add first hash
+    client.add_tee_hash(&hash_a);
+    assert!(client.has_tee_hash(&hash_a));
+
+    // Adding second different hash should succeed
+    let result = client.try_add_tee_hash(&hash_b);
+    assert_eq!(result, Ok(Ok(())));
+    assert!(client.has_tee_hash(&hash_b));
+
+    // Attempting to add first hash again should fail
+    let result = client.try_add_tee_hash(&hash_a);
+    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+
+    // Attempting to add second hash again should also fail
+    let result = client.try_add_tee_hash(&hash_b);
+    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+}
+
+/// Duplicate hash error should not emit an event.
+#[test]
+fn test_add_tee_hash_duplicate_no_event() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _admin) = setup(&env);
+    let hash = BytesN::from_array(&env, &[55; 32]);
+
+    // First addition succeeds and emits event
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Ok(Ok(())));
+    
+    // Verify the event was emitted for the first addition
+    let events = soroban_sdk::testutils::Events::all(&env.events());
+    let events_str = std::format!("{:#?}", events);
+    assert!(events_str.contains("TeeHashAdded"));
+
+    // Second addition should fail with DuplicateHash error
+    // and should not emit another event (verified by error return)
+    let result = client.try_add_tee_hash(&hash);
+    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+}
+

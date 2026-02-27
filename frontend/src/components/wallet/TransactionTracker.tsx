@@ -11,11 +11,10 @@ export interface TransactionTrackerProps {
   onStatusChange?: (status: TxStatus) => void;
 }
 
-const TERMINAL: TxStatus[] = ['CONFIRMED', 'FAILED'];
 const DEFAULT_INTERVAL = 5_000;
 const DEFAULT_TIMEOUT = 120_000;
 
-export function TransactionTracker({
+function TransactionTrackerInner({
   hash,
   pollIntervalMs = DEFAULT_INTERVAL,
   timeoutMs = DEFAULT_TIMEOUT,
@@ -54,13 +53,10 @@ export function TransactionTracker({
   }, [hash, addToast, onStatusChange]);
 
   useEffect(() => {
-    stopped.current = false;
-    prevStatus.current = null;
-    setStatus('PENDING');
-    setLedger(undefined);
-    setTimedOut(false);
-
-    poll();
+    // Schedule initial poll asynchronously to avoid setState in effect
+    const initialPoll = setTimeout(() => {
+      poll();
+    }, 0);
 
     const interval = setInterval(() => {
       if (!stopped.current) poll();
@@ -76,10 +72,11 @@ export function TransactionTracker({
 
     return () => {
       stopped.current = true;
+      clearTimeout(initialPoll);
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [hash, pollIntervalMs, timeoutMs, poll, addToast]);
+  }, [pollIntervalMs, timeoutMs, poll, addToast]);
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-darkblue p-4 shadow-glow w-full max-w-md">
@@ -146,6 +143,11 @@ function StatusIcon({ status }: { status: TxStatus | 'TIMED_OUT' }) {
       ✕
     </span>
   );
+}
+
+export function TransactionTracker(props: TransactionTrackerProps) {
+  // Use key prop to force remount when hash changes
+  return <TransactionTrackerInner key={props.hash} {...props} />;
 }
 
 export default TransactionTracker;
