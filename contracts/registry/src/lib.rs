@@ -31,6 +31,7 @@ pub enum VerificationError {
     InvalidAttestation = 4,
     AlreadyProcessed = 5,
     InvalidTeeHash = 6,
+    DuplicateHash = 7,
 }
 
 #[contracttype]
@@ -210,6 +211,7 @@ impl Registry {
     /// Add a trusted TEE measurement hash to the registry.
     /// Only the admin may call this function.
     /// Emits a `TeeHashAdded` event on success.
+    /// Returns `DuplicateHash` error if the hash already exists.
     pub fn add_tee_hash(env: Env, hash: BytesN<32>) -> Result<(), VerificationError> {
         let admin: Address = env
             .storage()
@@ -217,6 +219,17 @@ impl Registry {
             .get(&DataKey::Admin)
             .ok_or(VerificationError::Unauthorized)?;
         admin.require_auth();
+
+        // Check if hash already exists
+        let exists: bool = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TeeHash(hash.clone()))
+            .unwrap_or(false);
+
+        if exists {
+            return Err(VerificationError::DuplicateHash);
+        }
 
         env.storage()
             .persistent()
