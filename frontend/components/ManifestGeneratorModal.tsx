@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, FileText, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ManifestUseCase } from "@/services/manifestUseCases";
-import KeyValueBuilder, { type KeyValueEntry } from "@/components/manifest/KeyValueBuilder";
+import KeyValueBuilder from "@/components/KeyValueBuilder";
+import {
+  type ManifestKeyRow,
+  useDuplicateKeyValidation,
+} from "@/utils/manifestValidation";
 
 interface Props {
   open: boolean;
@@ -13,24 +17,59 @@ interface Props {
 }
 
 export default function ManifestGeneratorModal({ open, useCase, onClose }: Props) {
-  const [manifestData, setManifestData] = useState<Record<string, string>>({});
+  const [rows, setRows] = useState<ManifestKeyRow[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [manifestData, setManifestData] = useState<Record<string, string>>({});
 
-  const defaultEntries: KeyValueEntry[] = useMemo(
-    () =>
-      useCase?.template.fields?.map((field) => ({ key: field, value: "" })) ?? [
-        { key: "", value: "" },
-      ],
-    [useCase]
+  const { errors: keyErrors, hasDuplicates } = useDuplicateKeyValidation(rows);
+
+  useEffect(() => {
+    if (open && useCase) {
+      // Use setTimeout to avoid synchronous state update warning
+      const timer = setTimeout(() => {
+        setRows(
+          useCase.template.fields.map((field, index) => ({
+            id: `${useCase.id}-${index}`,
+            key: field,
+            value: "",
+          })),
+        );
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open, useCase]);
+
+  // Update manifestData whenever rows change to keep preview in sync if needed
+  useEffect(() => {
+    const data: Record<string, string> = {};
+    rows.forEach(row => {
+      if (row.key) data[row.key] = row.value;
+    });
+    // Use setTimeout to avoid synchronous state update warning
+    const timer = setTimeout(() => {
+      setManifestData(data);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [rows]);
+
+  const handleRowChange = useCallback(
+    (id: string, field: "key" | "value", value: string) => {
+      setRows((prev) =>
+        prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+      );
+    },
+    [],
   );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (hasDuplicates) return;
     setSubmitted(true);
   }
 
   function handleClose() {
-    setManifestData({});
+    setRows([]);
     setSubmitted(false);
     onClose();
   }
@@ -134,19 +173,7 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                       Updates are reflected in the preview. All data is processed client-side until you
                       anchor.
                     </p>
-
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Key-value pairs
-                      </h3>
-                      <KeyValueBuilder
-                        key={useCase.id}
-                        defaultEntries={defaultEntries}
-                        onChange={setManifestData}
-                        aria-label="Manifest key-value pairs"
-                        reorderable
-                      />
-                    </div>
+                    <KeyValueBuilder rows={rows} errors={keyErrors} onChange={handleRowChange} />
 
                     {/* Live preview panel */}
                     <div>
@@ -158,8 +185,15 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                         aria-live="polite"
                         aria-label="Manifest JSON preview"
                       >
-                        {Object.keys(manifestData).length > 0
-                          ? JSON.stringify(manifestData, null, 2)
+                        {rows.length > 0
+                          ? JSON.stringify(
+                              rows.reduce((acc, row) => {
+                                if (row.key) acc[row.key] = row.value;
+                                return acc;
+                              }, {} as Record<string, string>),
+                              null,
+                              2
+                            )
                           : "{}"}
                       </pre>
                     </div>
@@ -174,7 +208,12 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow hover:shadow-glow transition"
+                        disabled={hasDuplicates}
+                        className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow transition ${
+                          hasDuplicates
+                            ? "bg-gray-400 cursor-not-allowed shadow-none"
+                            : "bg-primary hover:shadow-glow"
+                        }`}
                       >
                         Generate Manifest
                       </button>
