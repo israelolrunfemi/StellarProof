@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import "./globals.css";
 import { WalletProvider } from "../context/WalletContext";
+import { ToastProvider } from "./context/ToastContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 export const metadata: Metadata = {
@@ -41,11 +42,13 @@ export default function RootLayout({
         className="antialiased bg-white dark:bg-darkblue text-gray-900 dark:text-gray-100 transition-colors duration-300"
       >
         <ThemeProvider>
-          <WalletProvider>
-            {children}
-            <Footer />
-            <ScrollToTop />
-          </WalletProvider>
+          <ToastProvider>
+            <WalletProvider>
+              {children}
+              <Footer />
+              <ScrollToTop />
+            </WalletProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

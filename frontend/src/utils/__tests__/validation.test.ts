@@ -2,6 +2,7 @@
  * Tests for SHA256 Validation Utility
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isValidSHA256, validateSHA256 } from '../validation';
 
 describe('SHA256 Validation Utility', () => {

@@ -1,22 +1,108 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, vec, Env, String, Vec};
+
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
+};
+
+#[contracttype]
+pub enum DataKey {
+    Registry,
+    Provenance,
+    Admin,
+    Provider(Address),
+}
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum Error {
+    NotInitialized = 1,
+    UnauthorizedSigner = 2,
+    AlreadyInitialized = 3,
+}
 
 #[contract]
 pub struct Contract;
 
-// This is a sample contract. Replace this placeholder with your own contract logic.
-// A corresponding test example is available in `test.rs`.
-//
-// For comprehensive examples, visit <https://github.com/stellar/soroban-examples>.
-// The repository includes use cases for the Stellar ecosystem, such as data storage on
-// the blockchain, token swaps, liquidity pools, and more.
-//
-// Refer to the official documentation:
-// <https://developers.stellar.org/docs/build/smart-contracts/overview>.
 #[contractimpl]
 impl Contract {
-    pub fn hello(env: Env, to: String) -> Vec<String> {
-        vec![&env, String::from_str(&env, "Hello"), to]
+    pub fn init(env: Env, registry: Address, provenance: Address, admin: Address) -> Result<(), Error> {
+        if env.storage().instance().has(&DataKey::Registry) {
+            return Err(Error::AlreadyInitialized);
+        }
+        env.storage().instance().set(&DataKey::Registry, &registry);
+        env.storage()
+            .instance()
+            .set(&DataKey::Provenance, &provenance);
+        env.storage().instance().set(&DataKey::Admin, &admin);
+        Ok(())
+    }
+
+    pub fn add_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().set(&key, &true);
+    }
+
+    pub fn remove_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().remove(&key);
+    }
+
+    pub fn is_provider(env: Env, provider: Address) -> bool {
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().has(&key)
+    }
+
+    /// Verifies a cryptographic signature from a TEE provider.
+    /// Calls the Registry contract to ensure both the provider and TEE hash are authorized.
+    /// Rejects with `OracleError::UnauthorizedSigner` if unauthorized.
+    /// Aborts (panics) if the Ed25519 signature is invalid.
+    pub fn verify_attestation(
+        env: Env,
+        provider: BytesN<32>,
+        tee_hash: BytesN<32>,
+        payload: Bytes,
+        signature: BytesN<64>,
+    ) -> Result<(), Error> {
+        let registry: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Registry)
+            .ok_or(Error::NotInitialized)?;
+
+        // Verify provider and hash are authorized in the Registry
+        let is_verified: bool = env.invoke_contract(
+            &registry,
+            &soroban_sdk::Symbol::new(&env, "is_verified"),
+            soroban_sdk::vec![
+                &env,
+                tee_hash.into_val(&env),
+                provider.clone().into_val(&env)
+            ],
+        );
+
+        if !is_verified {
+            return Err(Error::UnauthorizedSigner);
+        }
+
+        // Verify the cryptographic signature (aborts entirely if invalid)
+        env.crypto().ed25519_verify(&provider, &payload, &signature);
+
+        Ok(())
     }
 }
 

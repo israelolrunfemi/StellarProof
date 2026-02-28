@@ -2,10 +2,10 @@
 extern crate std;
 
 use super::*;
-use soroban_sdk::{Address, BytesN, Env};
 use ed25519_dalek::{Signer, SigningKey};
-use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::testutils::Address as _;
+use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{Address, BytesN, Env};
 
 fn create_keypair(env: &Env, seed: u8) -> (SigningKey, BytesN<32>) {
     let secret = [seed; 32];
@@ -31,7 +31,8 @@ fn setup(env: &Env) -> (RegistryClient, Address) {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(env, &contract_id);
     let admin = Address::generate(env);
-    client.initialize(&admin);
+    let provenance = Address::generate(env);
+    client.init(&admin, &provenance);
     (client, admin)
 }
 
@@ -144,10 +145,19 @@ fn test_unauthorized_provider() {
     let signature = sign_payload(&env, &signing_key, payload_slice);
 
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "Unauthorized"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "Unauthorized"))
+    );
 }
 
 #[test]
@@ -181,10 +191,19 @@ fn test_invalid_tee_hash() {
     let signature = sign_payload(&env, &signing_key, payload_slice);
 
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "InvalidTeeHash"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidTeeHash"))
+    );
 }
 
 #[test]
@@ -220,10 +239,19 @@ fn test_invalid_attestation() {
 
     // Call with id 1, but attestation has id 2
     let result = client.try_process_verification(&1, &attestation, &signature);
-    assert_eq!(result, Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation")))));
+    assert_eq!(
+        result,
+        Ok(Ok(RequestState::Rejected(soroban_sdk::String::from_str(
+            &env,
+            "InvalidAttestation"
+        ))))
+    );
 
     let req = client.get_request(&1).unwrap();
-    assert_eq!(req.state, RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation")));
+    assert_eq!(
+        req.state,
+        RequestState::Rejected(soroban_sdk::String::from_str(&env, "InvalidAttestation"))
+    );
 }
 
 #[test]
@@ -347,10 +375,28 @@ fn test_initialize_sets_admin() {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
+    let provenance = Address::generate(&env);
 
-    client.initialize(&admin);
+    client.init(&admin, &provenance);
 
     assert_eq!(client.get_admin(), Some(admin));
+}
+
+/// Calling init twice must panic.
+#[test]
+#[should_panic(expected = "Already initialized")]
+fn test_already_initialized_fails() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(Registry, ());
+    let client = RegistryClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    let provenance = Address::generate(&env);
+
+    client.init(&admin, &provenance);
+    // This second call should panic
+    client.init(&admin, &provenance);
 }
 
 /// Calling add_tee_hash before initialize (no admin set) must return Unauthorized.
@@ -380,9 +426,10 @@ fn test_add_tee_hash_non_admin_panics() {
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
 
-    // initialize doesn't require auth itself, so mock only for that call.
+    // init doesn't require auth itself, so mock only for that call.
     env.mock_all_auths();
-    client.initialize(&admin);
+    let provenance = Address::generate(&env);
+    client.init(&admin, &provenance);
     // Drop all mocked auths so the next call has no auth context.
     env.mock_auths(&[]);
 

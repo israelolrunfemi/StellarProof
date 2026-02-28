@@ -29,7 +29,9 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean | null>(null);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState<
+    boolean | null
+  >(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,17 +49,47 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!saved) return;
-    walletService.getAddress().then((address) => {
-      if (address && address === saved) {
-        setPublicKey(saved);
-        setIsConnected(true);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
+    let cancelled = false;
+
+    async function autoConnect() {
+      const isStoredConnected = typeof window !== "undefined" ? localStorage.getItem("walletConnected") === "true" : false;
+      if (!isStoredConnected) return;
+
+      setIsConnecting(true);
+
+      try {
+        const installed = await walletService.isInstalled();
+        if (!installed) {
+          if (!cancelled) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+          return;
+        }
+
+        const address = await walletService.getAddress();
+        if (!cancelled) {
+          if (address) {
+            setPublicKey(address);
+            setIsConnected(true);
+            localStorage.setItem(STORAGE_KEY, address);
+            localStorage.setItem("walletConnected", "true");
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem("walletConnected");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConnecting(false);
+        }
       }
-    });
-  }, [mounted]);
+    }
 
   const clearError = useCallback(() => setConnectError(null), []);
 
@@ -70,22 +102,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     setIsConnecting(true);
     try {
-      const result = await walletService.requestAccess();
-      if (result.error) {
-        setConnectError(
-          result.error.toLowerCase().includes("declined") ? "Connection was declined." : result.error
-        );
-        return;
+      const { address, error } = await walletService.requestAccess();
+      if (error) {
+        throw new Error(error);
       }
-      if (result.address) {
-        setPublicKey(result.address);
+      if (address) {
+        setPublicKey(address);
         setIsConnected(true);
         setConnectError(null);
         if (typeof window !== "undefined") {
           localStorage.setItem(STORAGE_KEY, result.address);
+          localStorage.setItem("walletConnected", "true");
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to connect.";
       setConnectError(message);
     } finally {
@@ -97,9 +127,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     setIsConnected(false);
     setConnectError(null);
-    if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("walletConnected");
+    }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const signTx = useCallback(async (_xdr: string): Promise<string> => {
     return "";
   }, []);
@@ -117,9 +151,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
 }
 
