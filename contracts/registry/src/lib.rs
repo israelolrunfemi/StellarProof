@@ -287,7 +287,7 @@ impl Registry {
     ///
     /// Returns `true` if the provided TEE measurement hash is currently
     /// registered as trusted in the registry, `false` otherwise.
-    pub fn is_verified(env: Env, hash: BytesN<32>) -> bool {
+    pub fn is_hash_verified(env: Env, hash: BytesN<32>) -> bool {
         Self::has_tee_hash(env, hash)
     }
 
