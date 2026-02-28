@@ -26,7 +26,7 @@
                         "symbol": "attestation_hash"
                       },
                       "val": {
-                        "string": "ahash"
+                        "string": "a1"
                       }
                     },
                     {
@@ -34,7 +34,7 @@
                         "symbol": "manifest_hash"
                       },
                       "val": {
-                        "string": "mhash"
+                        "string": "dup_hash"
                       }
                     },
                     {
@@ -42,7 +42,7 @@
                         "symbol": "storage_id"
                       },
                       "val": {
-                        "string": "sid"
+                        "string": "s1"
                       }
                     }
                   ]
@@ -54,7 +54,6 @@
         }
       ]
     ],
-    [],
     []
   ],
   "ledger": {
@@ -132,7 +131,7 @@
                       "symbol": "attestation_hash"
                     },
                     "val": {
-                      "string": "ahash"
+                      "string": "a1"
                     }
                   },
                   {
@@ -148,7 +147,7 @@
                       "symbol": "manifest_hash"
                     },
                     "val": {
-                      "string": "mhash"
+                      "string": "dup_hash"
                     }
                   },
                   {
@@ -156,7 +155,7 @@
                       "symbol": "storage_id"
                     },
                     "val": {
-                      "string": "sid"
+                      "string": "s1"
                     }
                   },
                   {
@@ -188,7 +187,7 @@
                     "symbol": "MANI"
                   },
                   {
-                    "string": "mhash"
+                    "string": "dup_hash"
                   }
                 ]
               },

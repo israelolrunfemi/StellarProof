@@ -82,6 +82,13 @@ impl ProvenanceContract {
         // Require authorization from the oracle contract only
         oracle.require_auth();
 
+        // Prevent duplicate certificates for the same manifest hash by maintaining
+        // a manifest_hash -> certificate_id mapping in storage.
+        let manifest_key = (symbol_short!("MANI"), details.manifest_hash.clone());
+        if env.storage().persistent().has(&manifest_key) {
+            panic!("Certificate already exists for this manifest hash");
+        }
+
         let mut counter: u64 = env
             .storage()
             .persistent()
@@ -100,6 +107,10 @@ impl ProvenanceContract {
 
         let cert_key = (symbol_short!("CERT"), counter);
         env.storage().persistent().set(&cert_key, &certificate);
+        // Store mapping from manifest_hash to certificate_id for fast duplicate checks.
+        env.storage()
+            .persistent()
+            .set(&manifest_key, &counter);
         env.storage()
             .persistent()
             .set(&symbol_short!("CERT_CNT"), &counter);
