@@ -29,7 +29,9 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean | null>(null);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState<
+    boolean | null
+  >(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -89,13 +91,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    autoConnect();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mounted]);
-
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -107,15 +102,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     setIsConnecting(true);
     try {
-      const result = await walletService.requestAccess();
-      if (result.error) {
-        setConnectError(
-          result.error.toLowerCase().includes("declined") ? "Connection was declined." : result.error
-        );
-        return;
+      const { address, error } = await walletService.requestAccess();
+      if (error) {
+        throw new Error(error);
       }
-      if (result.address) {
-        setPublicKey(result.address);
+      if (address) {
+        setPublicKey(address);
         setIsConnected(true);
         setConnectError(null);
         if (typeof window !== "undefined") {
@@ -123,7 +115,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           localStorage.setItem("walletConnected", "true");
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to connect.";
       setConnectError(message);
     } finally {
@@ -159,9 +151,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
 }
 

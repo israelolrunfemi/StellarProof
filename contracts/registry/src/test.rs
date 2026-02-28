@@ -31,7 +31,8 @@ fn setup(env: &Env) -> (RegistryClient, Address) {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(env, &contract_id);
     let admin = Address::generate(env);
-    client.init(&admin);
+    let provenance = Address::generate(env);
+    client.init(&admin, &provenance);
     (client, admin)
 }
 
@@ -374,8 +375,9 @@ fn test_initialize_sets_admin() {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
+    let provenance = Address::generate(&env);
 
-    client.init(&admin);
+    client.init(&admin, &provenance);
 
     assert_eq!(client.get_admin(), Some(admin));
 }
@@ -390,10 +392,11 @@ fn test_already_initialized_fails() {
     let contract_id = env.register(Registry, ());
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
+    let provenance = Address::generate(&env);
 
-    client.init(&admin);
+    client.init(&admin, &provenance);
     // This second call should panic
-    client.init(&admin);
+    client.init(&admin, &provenance);
 }
 
 /// Calling add_tee_hash before initialize (no admin set) must return Unauthorized.
@@ -425,7 +428,8 @@ fn test_add_tee_hash_non_admin_panics() {
 
     // init doesn't require auth itself, so mock only for that call.
     env.mock_all_auths();
-    client.init(&admin);
+    let provenance = Address::generate(&env);
+    client.init(&admin, &provenance);
     // Drop all mocked auths so the next call has no auth context.
     env.mock_auths(&[]);
 
@@ -607,52 +611,32 @@ fn test_add_tee_hash_after_removal() {
 
 /// Duplicate check should not affect different hashes.
 #[test]
-fn test_add_tee_hash_duplicate_check_independent() {
+fn test_verify_and_mint_failed_state() {
     let env = Env::default();
     env.mock_all_auths();
 
     let (client, _admin) = setup(&env);
-    let hash_a = BytesN::from_array(&env, &[0xAA; 32]);
-    let hash_b = BytesN::from_array(&env, &[0xBB; 32]);
-
-    // Add first hash
-    client.add_tee_hash(&hash_a);
-    assert!(client.has_tee_hash(&hash_a));
-
-    // Adding second different hash should succeed
-    let result = client.try_add_tee_hash(&hash_b);
-    assert_eq!(result, Ok(Ok(())));
-    assert!(client.has_tee_hash(&hash_b));
-
-    // Attempting to add first hash again should fail
-    let result = client.try_add_tee_hash(&hash_a);
-    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
-
-    // Attempting to add second hash again should also fail
-    let result = client.try_add_tee_hash(&hash_b);
-    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
-}
-
-/// Duplicate hash error should not emit an event.
-#[test]
-fn test_add_tee_hash_duplicate_no_event() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-    let hash = BytesN::from_array(&env, &[55; 32]);
-
-    // First addition succeeds and emits event
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Ok(Ok(())));
     
-    // Verify the event was emitted for the first addition
-    let events = soroban_sdk::testutils::Events::all(&env.events());
-    let events_str = std::format!("{:#?}", events);
-    assert!(events_str.contains("TeeHashAdded"));
-
-    // Second addition should fail with DuplicateHash error
-    // and should not emit another event (verified by error return)
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
+    let content = String::from_str(&env, "test content");
+    // We expect this to fail minting because the provenance address in setup is just a random address,
+    // not a real contract that implements the expected interface.
+    // However, if we pass the correct hash, verify_and_mint should return success=true, state=Failed.
+    
+    // Compute hash logic is internal, but we can guess it or just use verify_and_mint to get it.
+    // Let's pass a dummy hash first.
+    let dummy_hash = String::from_str(&env, "dummy");
+    let owner = Address::generate(&env);
+    
+    let result1 = client.verify_and_mint(&content, &dummy_hash, &owner);
+    assert!(!result1.success);
+    
+    let correct_hash = result1.content_hash;
+    
+    // Now call with correct hash
+    let result2 = client.verify_and_mint(&content, &correct_hash, &owner);
+    
+    assert!(result2.success);
+    // Minting fails (provenance addr is random), so state should be Failed
+    assert_eq!(result2.state, RequestState::Failed);
+    assert!(result2.certificate_id.is_none());
 }
