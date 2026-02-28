@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 setTheme('light');
                 applyTheme('light');
             } else {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
+                 
                 setTheme('dark');
                 applyTheme('dark');
             }

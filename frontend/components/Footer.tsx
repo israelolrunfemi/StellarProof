@@ -138,15 +138,19 @@ export default function Footer() {
                 {section.title}
               </h3>
               <nav className="space-y-3">
-                {section.links.map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    className={`text-sm ${textSecondary} hover:text-blue-300 transition-colors block`}
-                  >
-                    {link}
-                  </a>
-                ))}
+                {section.links.map((link) => {
+                  const href =
+                    link === "Report an Issue" ? "/report-issue" : "#";
+                  return (
+                    <a
+                      key={link}
+                      href={href}
+                      className={`text-sm ${textSecondary} hover:text-blue-300 transition-colors block`}
+                    >
+                      {link}
+                    </a>
+                  );
+                })}
               </nav>
             </div>
           ))}

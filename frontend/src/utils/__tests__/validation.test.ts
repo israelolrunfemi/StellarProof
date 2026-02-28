@@ -2,6 +2,7 @@
  * Tests for SHA256 Validation Utility
  */
 
+ 
 import { isValidSHA256, validateSHA256 } from '../validation';
 
 describe('SHA256 Validation Utility', () => {
@@ -53,11 +54,11 @@ describe('SHA256 Validation Utility', () => {
     });
 
     test('should return false for edge cases', () => {
-      expect(isValidSHA256(null as any)).toBe(false);
-      expect(isValidSHA256(undefined as any)).toBe(false);
-      expect(isValidSHA256(123 as any)).toBe(false);
-      expect(isValidSHA256({} as any)).toBe(false);
-      expect(isValidSHA256([] as any)).toBe(false);
+      expect(isValidSHA256(null as unknown as string)).toBe(false);
+      expect(isValidSHA256(undefined as unknown as string)).toBe(false);
+      expect(isValidSHA256(123 as unknown as string)).toBe(false);
+      expect(isValidSHA256({} as unknown as string)).toBe(false);
+      expect(isValidSHA256([] as unknown as string)).toBe(false);
     });
   });
 
@@ -80,11 +81,11 @@ describe('SHA256 Validation Utility', () => {
     });
 
     test('should return appropriate error message for null input', () => {
-      expect(validateSHA256(null as any)).toBe('Hash cannot be null or undefined');
+      expect(validateSHA256(null as unknown as string)).toBe('Hash cannot be null or undefined');
     });
 
     test('should return appropriate error message for undefined input', () => {
-      expect(validateSHA256(undefined as any)).toBe('Hash cannot be null or undefined');
+      expect(validateSHA256(undefined as unknown as string)).toBe('Hash cannot be null or undefined');
     });
 
     test('should return appropriate error message for empty string', () => {
@@ -92,9 +93,9 @@ describe('SHA256 Validation Utility', () => {
     });
 
     test('should return appropriate error message for non-string input', () => {
-      expect(validateSHA256(123 as any)).toBe('Hash must be a string');
-      expect(validateSHA256({} as any)).toBe('Hash must be a string');
-      expect(validateSHA256([] as any)).toBe('Hash must be a string');
+      expect(validateSHA256(123 as unknown as string)).toBe('Hash must be a string');
+      expect(validateSHA256({} as unknown as string)).toBe('Hash must be a string');
+      expect(validateSHA256([] as unknown as string)).toBe('Hash must be a string');
     });
 
     test('should return appropriate error message for wrong length', () => {
