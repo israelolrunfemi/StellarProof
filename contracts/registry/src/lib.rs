@@ -283,6 +283,14 @@ impl Registry {
             .unwrap_or(false)
     }
 
+    /// Public verification helper used by external contracts (e.g. the Oracle).
+    ///
+    /// Returns `true` if the provided TEE measurement hash is currently
+    /// registered as trusted in the registry, `false` otherwise.
+    pub fn is_verified(env: Env, hash: BytesN<32>) -> bool {
+        Self::has_tee_hash(env, hash)
+    }
+
     /// Add an authorized Oracle provider to the registry.
     /// Only the admin may call this function.
     pub fn add_provider(env: Env, provider: BytesN<32>) -> Result<(), VerificationError> {
