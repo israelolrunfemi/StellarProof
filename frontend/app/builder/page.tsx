@@ -28,7 +28,7 @@ const MOCK_MANIFEST_DATA = {
 
 export default function BuilderPage() {
   // Maintaining data consistency - this state is what gets converted to JSON/XML
-  const [manifestData, setManifestData] = useState(MOCK_MANIFEST_DATA);
+  const [manifestData] = useState(MOCK_MANIFEST_DATA);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#020617] font-sans selection:bg-primary/30">

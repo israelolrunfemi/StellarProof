@@ -1,10 +1,16 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};
+
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, Address, Bytes, BytesN, Env, IntoVal,
+    InvokeError, Symbol, Val, Vec, vec,
+};
 
 #[contracttype]
 pub enum DataKey {
     Registry,
     Provenance,
+    Admin,
+    Provider(Address),
     /// Monotonically increasing counter for request IDs.
     NextRequestId,
     /// Temporary-storage key for a specific verification request.
@@ -33,6 +39,15 @@ pub struct VerificationRequest {
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
+pub enum Error {
+    NotInitialized = 1,
+    UnauthorizedSigner = 2,
+    AlreadyInitialized = 3,
+}
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
 pub enum OracleError {
     /// Oracle has not been initialized with a registry address.
     RegistryNotConfigured = 1,
@@ -42,20 +57,92 @@ pub enum OracleError {
     TeeNotVerified = 3,
 }
 
+
 #[contract]
 pub struct Contract;
 
 #[contractimpl]
 impl Contract {
-    pub fn init(env: Env, registry: Address, provenance: Address) {
+    pub fn init(env: Env, registry: Address, provenance: Address, admin: Address) -> Result<(), Error> {
         if env.storage().instance().has(&DataKey::Registry) {
-            panic!("already initialized");
+            return Err(Error::AlreadyInitialized);
         }
         env.storage().instance().set(&DataKey::Registry, &registry);
         env.storage()
             .instance()
             .set(&DataKey::Provenance, &provenance);
+        env.storage().instance().set(&DataKey::Admin, &admin);
+        Ok(())
     }
+
+    pub fn add_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().set(&key, &true);
+    }
+
+    pub fn remove_provider(env: Env, provider: Address) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .expect("Admin not set; initialize first");
+        admin.require_auth();
+
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().remove(&key);
+    }
+
+    pub fn is_provider(env: Env, provider: Address) -> bool {
+        let key = DataKey::Provider(provider);
+        env.storage().persistent().has(&key)
+    }
+
+    /// Verifies a cryptographic signature from a TEE provider.
+    /// Calls the Registry contract to ensure both the provider and TEE hash are authorized.
+    /// Rejects with `OracleError::UnauthorizedSigner` if unauthorized.
+    /// Aborts (panics) if the Ed25519 signature is invalid.
+    pub fn verify_attestation(
+        env: Env,
+        provider: BytesN<32>,
+        tee_hash: BytesN<32>,
+        payload: Bytes,
+        signature: BytesN<64>,
+    ) -> Result<(), Error> {
+        let registry: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Registry)
+            .ok_or(Error::NotInitialized)?;
+
+        // Verify provider and hash are authorized in the Registry
+        let is_verified: bool = env.invoke_contract(
+            &registry,
+            &soroban_sdk::Symbol::new(&env, "is_verified"),
+            soroban_sdk::vec![
+                &env,
+                tee_hash.into_val(&env),
+                provider.clone().into_val(&env)
+            ],
+        );
+
+        if !is_verified {
+            return Err(Error::UnauthorizedSigner);
+        }
+
+        // Verify the cryptographic signature (aborts entirely if invalid)
+        env.crypto().ed25519_verify(&provider, &payload, &signature);
+
+        Ok(())
+    }
+
+
 
     /// Submit a new content verification request to the Oracle.
     ///
@@ -111,10 +198,10 @@ impl Contract {
             .get(&DataKey::Registry)
             .ok_or(OracleError::RegistryNotConfigured)?;
 
-        // 2. Call `is_verified` on the registry via a cross-contract call.
+        // 2. Call `has_tee_hash` on the registry via a cross-contract call.
         //    Use `try_invoke_contract` so that we can handle failures
         //    gracefully instead of aborting the transaction.
-        let func = Symbol::new(&env, "is_verified");
+        let func = Symbol::new(&env, "has_tee_hash");
         let args: Vec<Val> = vec![&env, tee_hash.into_val(&env)];
 
         let result = env.try_invoke_contract::<bool, InvokeError>(&registry, &func, args);

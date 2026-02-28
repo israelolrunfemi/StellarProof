@@ -28,6 +28,10 @@ fn test_mint_certificate() {
     assert_eq!(cert_id, 1);
 
     let cert = client.get_certificate(&cert_id);
+    let certificate = client.get_certificate(&cert_id);
+    assert!(certificate.is_ok());
+
+    let cert = certificate.unwrap();
     assert_eq!(cert.storage_id, details.storage_id);
     assert_eq!(cert.manifest_hash, details.manifest_hash);
     assert_eq!(cert.attestation_hash, details.attestation_hash);
@@ -79,6 +83,9 @@ fn test_mint_multiple_certificates() {
     client.get_certificate(&cert_id1);
     client.get_certificate(&cert_id2);
     client.get_certificate(&cert_id3);
+    assert!(client.get_certificate(&cert_id1).is_ok());
+    assert!(client.get_certificate(&cert_id2).is_ok());
+    assert!(client.get_certificate(&cert_id3).is_ok());
 }
 
 #[test]
@@ -95,6 +102,7 @@ fn test_get_nonexistent_certificate() {
             "expected CertificateNotFound error, got: {other:?}"
         ),
     }
+    assert_eq!(result, Ok(Err(ProvenanceError::CertificateNotFound)));
 }
 
 #[test]
