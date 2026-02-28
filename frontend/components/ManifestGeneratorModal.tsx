@@ -23,15 +23,17 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
   const { errors: keyErrors, hasDuplicates } = useDuplicateKeyValidation(rows);
 
   useEffect(() => {
-    if (!open || !useCase) return;
-    setRows(
-      useCase.template.fields.map((field, index) => ({
-        id: `${useCase.id}-${index}`,
-        key: field,
-        value: "",
-      })),
-    );
-  }, [open, useCase]);
+    if (open && useCase) {
+      setRows(
+        useCase.template.fields.map((field, index) => ({
+          id: `${useCase.id}-${index}`,
+          key: field,
+          value: "",
+        })),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleRowChange = useCallback(
     (id: string, field: "key" | "value", value: string) => {
