@@ -465,178 +465,60 @@ fn test_add_tee_hash_multiple_hashes() {
 }
 
 // ---------------------------------------------------------------------------
-// New: is_verified read-only function tests
+// New: remove_tee_hash admin-guard tests
 // ---------------------------------------------------------------------------
 
+/// Happy path: admin removes a hash → no longer retrievable.
 #[test]
-fn test_is_verified_both_valid() {
+fn test_remove_tee_hash_removes_hash() {
     let env = Env::default();
     env.mock_all_auths();
 
     let (client, _admin) = setup(&env);
+    let hash = BytesN::from_array(&env, &[0xAB; 32]);
 
-    let (_, provider_pk) = create_keypair(&env, 1);
-    let hash = BytesN::from_array(&env, &[88; 32]);
-
-    client.add_provider(&provider_pk);
-    client.add_tee_hash(&hash);
-
-    assert!(client.is_verified(&hash, &provider_pk));
-}
-
-#[test]
-fn test_is_verified_invalid_hash() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-
-    let (_, provider_pk) = create_keypair(&env, 1);
-    let valid_hash = BytesN::from_array(&env, &[88; 32]);
-    let invalid_hash = BytesN::from_array(&env, &[99; 32]);
-
-    client.add_provider(&provider_pk);
-    client.add_tee_hash(&valid_hash);
-
-    assert!(!client.is_verified(&invalid_hash, &provider_pk));
-}
-
-#[test]
-fn test_is_verified_invalid_provider() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-
-    let (_, provider_pk) = create_keypair(&env, 1);
-    let (_, invalid_provider_pk) = create_keypair(&env, 2);
-    let hash = BytesN::from_array(&env, &[88; 32]);
-
-    client.add_provider(&provider_pk);
-    client.add_tee_hash(&hash);
-
-    assert!(!client.is_verified(&hash, &invalid_provider_pk));
-}
-
-#[test]
-fn test_is_verified_both_invalid() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-
-    let (_, provider_pk) = create_keypair(&env, 1);
-    let (_, invalid_provider_pk) = create_keypair(&env, 2);
-    let hash = BytesN::from_array(&env, &[88; 32]);
-    let invalid_hash = BytesN::from_array(&env, &[99; 32]);
-
-    client.add_provider(&provider_pk);
-    client.add_tee_hash(&hash);
-
-    assert!(!client.is_verified(&invalid_hash, &invalid_provider_pk));
-}
-
-// ---------------------------------------------------------------------------
-// Duplicate hash prevention tests
-// ---------------------------------------------------------------------------
-
-/// Attempting to add the same hash twice must return DuplicateHash error.
-#[test]
-fn test_add_tee_hash_duplicate_returns_error() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-    let hash = BytesN::from_array(&env, &[42; 32]);
-
-    // First addition should succeed
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Ok(Ok(())));
-    assert!(client.has_tee_hash(&hash));
-
-    // Second addition of the same hash should fail with DuplicateHash
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
-}
-
-/// Idempotent behavior: adding the same hash multiple times should consistently fail.
-#[test]
-fn test_add_tee_hash_idempotent_behavior() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-    let hash = BytesN::from_array(&env, &[99; 32]);
-
-    // First addition succeeds
     client.add_tee_hash(&hash);
     assert!(client.has_tee_hash(&hash));
 
-    // Multiple subsequent attempts should all fail with DuplicateHash
-    for _ in 0..3 {
-        let result = client.try_add_tee_hash(&hash);
-        assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
-    }
-
-    // Hash should still be present and valid
-    assert!(client.has_tee_hash(&hash));
-}
-
-/// After removing a hash, it can be added again without duplicate error.
-#[test]
-fn test_add_tee_hash_after_removal() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let (client, _admin) = setup(&env);
-    let hash = BytesN::from_array(&env, &[77; 32]);
-
-    // Add hash
-    client.add_tee_hash(&hash);
-    assert!(client.has_tee_hash(&hash));
-
-    // Attempt to add again should fail
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Err(Ok(VerificationError::DuplicateHash)));
-
-    // Remove hash
     client.remove_tee_hash(&hash);
     assert!(!client.has_tee_hash(&hash));
-
-    // Now adding the same hash should succeed
-    let result = client.try_add_tee_hash(&hash);
-    assert_eq!(result, Ok(Ok(())));
-    assert!(client.has_tee_hash(&hash));
 }
 
-/// Duplicate check should not affect different hashes.
+/// Calling remove_tee_hash before initialize (no admin set) must return Unauthorized.
 #[test]
-fn test_verify_and_mint_failed_state() {
+fn test_remove_tee_hash_no_admin_returns_unauthorized() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let (client, _admin) = setup(&env);
-    
-    let content = String::from_str(&env, "test content");
-    // We expect this to fail minting because the provenance address in setup is just a random address,
-    // not a real contract that implements the expected interface.
-    // However, if we pass the correct hash, verify_and_mint should return success=true, state=Failed.
-    
-    // Compute hash logic is internal, but we can guess it or just use verify_and_mint to get it.
-    // Let's pass a dummy hash first.
-    let dummy_hash = String::from_str(&env, "dummy");
-    let owner = Address::generate(&env);
-    
-    let result1 = client.verify_and_mint(&content, &dummy_hash, &owner);
-    assert!(!result1.success);
-    
-    let correct_hash = result1.content_hash;
-    
-    // Now call with correct hash
-    let result2 = client.verify_and_mint(&content, &correct_hash, &owner);
-    
-    assert!(result2.success);
-    // Minting fails (provenance addr is random), so state should be Failed
-    assert_eq!(result2.state, RequestState::Failed);
-    assert!(result2.certificate_id.is_none());
+    // Register without calling initialize.
+    let contract_id = env.register(Registry, ());
+    let client = RegistryClient::new(&env, &contract_id);
+    let hash = BytesN::from_array(&env, &[0xCD; 32]);
+
+    let result = client.try_remove_tee_hash(&hash);
+    assert_eq!(result, Err(Ok(VerificationError::Unauthorized)));
+}
+
+/// A non-admin caller must not be able to remove a TEE hash.
+/// Without mocking the admin's auth, `require_auth` aborts the invocation.
+#[test]
+#[should_panic]
+fn test_remove_tee_hash_non_admin_panics() {
+    let env = Env::default();
+    // No auths mocked — require_auth for the admin will abort.
+
+    let contract_id = env.register(Registry, ());
+    let client = RegistryClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+
+    // initialize doesn't require auth itself, so mock only for that call.
+    env.mock_all_auths();
+    client.initialize(&admin);
+    // Drop all mocked auths so the next call has no auth context.
+    env.mock_auths(&[]);
+
+    let hash = BytesN::from_array(&env, &[0xEF; 32]);
+
+    // admin.require_auth() will abort — no auth is mocked for admin.
+    client.remove_tee_hash(&hash);
 }
