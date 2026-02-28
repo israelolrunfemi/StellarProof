@@ -19,21 +19,39 @@ interface Props {
 export default function ManifestGeneratorModal({ open, useCase, onClose }: Props) {
   const [rows, setRows] = useState<ManifestKeyRow[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [manifestData, setManifestData] = useState<Record<string, string>>({});
 
   const { errors: keyErrors, hasDuplicates } = useDuplicateKeyValidation(rows);
 
   useEffect(() => {
     if (open && useCase) {
-      setRows(
-        useCase.template.fields.map((field, index) => ({
-          id: `${useCase.id}-${index}`,
-          key: field,
-          value: "",
-        })),
-      );
+      // Use setTimeout to avoid synchronous state update warning
+      const timer = setTimeout(() => {
+        setRows(
+          useCase.template.fields.map((field, index) => ({
+            id: `${useCase.id}-${index}`,
+            key: field,
+            value: "",
+          })),
+        );
+      }, 0);
+      return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, useCase]);
+
+  // Update manifestData whenever rows change to keep preview in sync if needed
+  useEffect(() => {
+    const data: Record<string, string> = {};
+    rows.forEach(row => {
+      if (row.key) data[row.key] = row.value;
+    });
+    // Use setTimeout to avoid synchronous state update warning
+    const timer = setTimeout(() => {
+      setManifestData(data);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [rows]);
 
   const handleRowChange = useCallback(
     (id: string, field: "key" | "value", value: string) => {
@@ -79,7 +97,7 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
             role="dialog"
             aria-modal="true"
             aria-labelledby="manifest-modal-title"
-            className="relative w-full max-w-lg rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-darkblue shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-darkblue shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -148,13 +166,37 @@ export default function ManifestGeneratorModal({ open, useCase, onClose }: Props
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onSubmit={handleSubmit}
-                    className="flex flex-col gap-4"
+                    className="flex flex-col gap-5"
                   >
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Fill in the fields below to generate your manifest. All data is processed
-                      client-side; nothing is sent to a server until you anchor.
+                      Build your manifest metadata below. Add, edit, or reorder key-value pairs.
+                      Updates are reflected in the preview. All data is processed client-side until you
+                      anchor.
                     </p>
                     <KeyValueBuilder rows={rows} errors={keyErrors} onChange={handleRowChange} />
+
+                    {/* Live preview panel */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Live preview
+                      </h3>
+                      <pre
+                        className="rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4 text-xs text-gray-800 dark:text-gray-200 overflow-x-auto overflow-y-auto max-h-48 font-mono"
+                        aria-live="polite"
+                        aria-label="Manifest JSON preview"
+                      >
+                        {rows.length > 0
+                          ? JSON.stringify(
+                              rows.reduce((acc, row) => {
+                                if (row.key) acc[row.key] = row.value;
+                                return acc;
+                              }, {} as Record<string, string>),
+                              null,
+                              2
+                            )
+                          : "{}"}
+                      </pre>
+                    </div>
 
                     <div className="flex gap-3 pt-2">
                       <button

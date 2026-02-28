@@ -511,9 +511,10 @@ fn test_remove_tee_hash_non_admin_panics() {
     let client = RegistryClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
 
-    // initialize doesn't require auth itself, so mock only for that call.
+    // init doesn't require auth itself, so mock only for that call.
     env.mock_all_auths();
-    client.initialize(&admin);
+    let provenance = Address::generate(&env);
+    client.init(&admin, &provenance);
     // Drop all mocked auths so the next call has no auth context.
     env.mock_auths(&[]);
 

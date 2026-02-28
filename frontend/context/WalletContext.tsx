@@ -94,7 +94,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signTx = useCallback(async (_xdr: string): Promise<string> => {
+  const signTx = useCallback(async (xdr: string): Promise<string> => {
+    void xdr;
     return "";
   }, []);
 
