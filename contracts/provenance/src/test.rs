@@ -28,7 +28,7 @@ fn test_mint_certificate() {
     assert_eq!(cert_id, 1);
 
     let certificate = client.get_certificate(&cert_id);
-    assert!(certificate.is_some());
+    assert!(certificate.is_ok());
 
     let cert = certificate.unwrap();
     assert_eq!(cert.storage_id, details.storage_id);
@@ -79,9 +79,9 @@ fn test_mint_multiple_certificates() {
     assert_eq!(cert_id3, 3);
 
     // Verify all certificates exist
-    assert!(client.get_certificate(&cert_id1).is_some());
-    assert!(client.get_certificate(&cert_id2).is_some());
-    assert!(client.get_certificate(&cert_id3).is_some());
+    assert!(client.get_certificate(&cert_id1).is_ok());
+    assert!(client.get_certificate(&cert_id2).is_ok());
+    assert!(client.get_certificate(&cert_id3).is_ok());
 }
 
 #[test]
@@ -90,8 +90,8 @@ fn test_get_nonexistent_certificate() {
     let contract_id = env.register(ProvenanceContract, ());
     let client = ProvenanceContractClient::new(&env, &contract_id);
 
-    let certificate = client.get_certificate(&999);
-    assert!(certificate.is_none());
+    let result = client.try_get_certificate(&999);
+    assert_eq!(result, Ok(Err(ProvenanceError::CertificateNotFound)));
 }
 
 #[test]

@@ -1,6 +1,7 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractevent, contractimpl, contracttype, symbol_short, Address, Env, String,
+    contract, contracterror, contractevent, contractimpl, contracttype, symbol_short, Address, Env,
+    String,
 };
 
 #[contractevent]
@@ -16,6 +17,13 @@ pub struct CertificateMinted {
 
 #[contract]
 pub struct ProvenanceContract;
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum ProvenanceError {
+    CertificateNotFound = 1,
+}
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -107,9 +115,18 @@ impl ProvenanceContract {
     }
 
     /// Get certificate by ID
-    pub fn get_certificate(env: Env, certificate_id: u64) -> Option<Certificate> {
+    ///
+    /// Returns `Ok(Certificate)` when a certificate with the given ID exists,
+    /// or `Err(ProvenanceError::CertificateNotFound)` when it does not.
+    pub fn get_certificate(
+        env: Env,
+        certificate_id: u64,
+    ) -> Result<Certificate, ProvenanceError> {
         let cert_key = (symbol_short!("CERT"), certificate_id);
-        env.storage().persistent().get(&cert_key)
+        env.storage()
+            .persistent()
+            .get(&cert_key)
+            .ok_or(ProvenanceError::CertificateNotFound)
     }
 }
 
