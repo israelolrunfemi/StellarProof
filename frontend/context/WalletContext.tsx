@@ -1,90 +1,174 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { isConnected as checkIsConnected, requestAccess } from "@stellar/freighter-api";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { walletService, type NetworkDetails } from "@/services/wallet";
+
+const STORAGE_KEY = "freighter_public_key";
+const NETWORK_POLL_INTERVAL_MS = 4000;
 
 interface WalletState {
-    publicKey: string | null;
-    isConnected: boolean;
-    connect: () => Promise<void>;
-    disconnect: () => void;
-    signTx: (xdr: string) => Promise<string>;
+  publicKey: string | null;
+  isConnected: boolean;
+  isFreighterInstalled: boolean | null;
+  isConnecting: boolean;
+  connectError: string | null;
+  networkDetails: NetworkDetails | null;
+  connect: () => Promise<void>;
+  disconnect: () => void;
+  signTx: (xdr: string) => Promise<string>;
+  clearError: () => void;
+  refreshNetwork: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
-export function WalletProvider({ children }: { children: ReactNode }) {
-    const [publicKey, setPublicKey] = useState<string | null>(null);
-    const [isConnected, setIsConnected] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-        // Check localStorage on mount
-        const savedKey = localStorage.getItem("freighter_public_key");
-        if (savedKey) {
-            // Silently verify if still connected
-            checkIsConnected().then((connected) => {
-                if (connected) {
-                    setPublicKey(savedKey);
-                    setIsConnected(true);
-                } else {
-                    localStorage.removeItem("freighter_public_key");
-                }
-            });
-        }
-    }, []);
-
-    const connect = useCallback(async () => {
-        try {
-            const installed = await checkIsConnected();
-            if (!installed) {
-                alert("Freighter is not installed. Please download the extension.");
-                return;
-            }
-
-            const { address, error } = await requestAccess();
-            if (error) {
-                throw new Error(error);
-            }
-            if (address) {
-                setPublicKey(address);
-                setIsConnected(true);
-                localStorage.setItem("freighter_public_key", address);
-            }
-        } catch (err: any) {
-            console.error(err);
-            if (err?.message?.includes("User declined")) {
-                alert("Connection request was rejected by the user.");
-            } else {
-                alert("An error occurred while connecting to Freighter.");
-            }
-        }
-    }, []);
-
-    const disconnect = useCallback(() => {
-        setPublicKey(null);
-        setIsConnected(false);
-        localStorage.removeItem("freighter_public_key");
-    }, []);
-
-    const signTx = useCallback(async (xdr: string): Promise<string> => {
-        // Placeholder for future Soroban interactions
-        console.log("signTx called with", xdr);
-        return "";
-    }, []);
-
-    return (
-        <WalletContext.Provider value={{ publicKey, isConnected: isMounted && isConnected, connect, disconnect, signTx }}>
-            {children}
-        </WalletContext.Provider>
-    );
+export function useWallet() {
+  const context = useContext(WalletContext);
+  if (context === undefined) {
+    throw new Error("useWallet must be used within a WalletProvider");
+  }
+  return context;
 }
 
-export function useWallet() {
-    const context = useContext(WalletContext);
-    if (context === undefined) {
-        throw new Error("useWallet must be used within a WalletProvider");
+export function WalletProvider({ children }: { children: ReactNode }) {
+  const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean>(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [networkDetails, setNetworkDetails] = useState<NetworkDetails | null>(null);
+
+  const refreshNetwork = useCallback(async () => {
+    try {
+      const details = await walletService.getNetworkDetails();
+      setNetworkDetails(details);
+    } catch {
+      setNetworkDetails(null);
     }
-    return context;
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    walletService.isInstalled().then((installed) => {
+      if (!cancelled) setIsFreighterInstalled(installed);
+    });
+    setMounted(true);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    if (!saved) return;
+    walletService.getAddress().then((address) => {
+      if (address && address === saved) {
+        setPublicKey(saved);
+        setIsConnected(true);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    });
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted || !isConnected) return;
+    refreshNetwork();
+    const interval = setInterval(refreshNetwork, NETWORK_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [mounted, isConnected, refreshNetwork]);
+
+  const clearError = useCallback(() => setConnectError(null), []);
+
+  const connect = useCallback(async () => {
+    setConnectError(null);
+    const installed = await walletService.isInstalled();
+    if (!installed) {
+      setConnectError("Freighter is not installed.");
+      return;
+    }
+    setIsConnecting(true);
+    try {
+      const address = await walletService.getAddress();
+      if (address) {
+        setPublicKey(address);
+        setIsConnected(true);
+        setConnectError(null);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, address);
+          localStorage.setItem("walletConnected", "true");
+        }
+        const details = await walletService.getNetworkDetails();
+        setNetworkDetails(details);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to connect.";
+      setConnectError(message);
+    } finally {
+      setIsConnecting(false);
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    setPublicKey(null);
+    setIsConnected(false);
+    setConnectError(null);
+    setNetworkDetails(null);
+    if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  const signTx = useCallback(async (xdr: string): Promise<string> => {
+    void xdr;
+    return "";
+  }, []);
+
+  // Auto-connect effect
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const isStoredConnected = typeof window !== "undefined" ? localStorage.getItem("walletConnected") === "true" : false;
+    if (!isStoredConnected) return;
+
+    // Check if installed before trying to auto-connect
+    walletService.isInstalled().then((installed) => {
+      if (installed) {
+         walletService.getAddress().then((address) => {
+            if (address) {
+              setPublicKey(address);
+              setIsConnected(true);
+            } else {
+               // If we can't get address despite stored connection, clear storage
+               disconnect();
+            }
+         }).catch(() => disconnect());
+      }
+    });
+  }, [mounted, disconnect]);
+
+  const value: WalletState = {
+    publicKey,
+    isConnected: mounted && isConnected,
+    isFreighterInstalled,
+    isConnecting,
+    connectError,
+    networkDetails,
+    connect,
+    disconnect,
+    signTx,
+    clearError,
+    refreshNetwork,
+  };
+
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
 }

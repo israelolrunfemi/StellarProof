@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { WalletModal } from "./WalletModal";
 import ThemeToggle from "./ThemeToggle";
+import NetworkBadge from "./wallet/NetworkBadge";
+import WrongNetworkWarning from "./wallet/WrongNetworkWarning";
 
 const NAV_LINKS = [
   { href: "#home", label: "Home" },
@@ -102,7 +103,8 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-blue-500/10 bg-white dark:bg-darkblue/80 dark:backdrop-blur-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_6px_-1px_rgba(1,34,84,0.4)] transition-colors duration-300">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/20 bg-white dark:bg-darkblue shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.2)] transition-colors duration-300">
+      <WrongNetworkWarning />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
@@ -203,20 +205,12 @@ export default function Header() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3">
-          <button className="hidden sm:inline-flex px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-300">
-            Launch App
-          </button>
+        <div className="flex items-center gap-2">
+          <NetworkBadge />
           <ThemeToggle />
           <div className="hidden sm:block">
             <WalletModal />
           </div>
-          <Link
-            href="/creator/upload-content"
-            className="hidden sm:inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-button-glow transition hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue"
-          >
-            Launch App
-          </Link>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 dark:text-white transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue lg:hidden"
@@ -302,13 +296,6 @@ export default function Header() {
                 )}
               </ul>
               <div className="mt-4 border-t border-gray-200 dark:border-white/10 pt-4 px-4 w-full">
-                <Link
-                  href="/creator/upload-content"
-                  className="mb-3 flex w-full items-center justify-center rounded-lg bg-primary py-3 text-base font-semibold text-white shadow-button-glow transition hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-darkblue"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Launch App
-                </Link>
                 <WalletModal />
               </div>
             </nav>
