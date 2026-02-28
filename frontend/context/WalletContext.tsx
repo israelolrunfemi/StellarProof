@@ -26,10 +26,18 @@ interface WalletState {
 
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
+export function useWallet() {
+  const context = useContext(WalletContext);
+  if (context === undefined) {
+    throw new Error("useWallet must be used within a WalletProvider");
+  }
+  return context;
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean | null>(null);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -45,20 +53,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!saved) return;
-    walletService.getAddress().then((address) => {
-      if (address && address === saved) {
-        setPublicKey(saved);
-        setIsConnected(true);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    });
-  }, [mounted]);
-
   const clearError = useCallback(() => setConnectError(null), []);
 
   const connect = useCallback(async () => {
@@ -70,22 +64,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
     setIsConnecting(true);
     try {
-      const result = await walletService.requestAccess();
-      if (result.error) {
-        setConnectError(
-          result.error.toLowerCase().includes("declined") ? "Connection was declined." : result.error
-        );
-        return;
-      }
-      if (result.address) {
-        setPublicKey(result.address);
+      const address = await walletService.getAddress();
+      if (address) {
+        setPublicKey(address);
         setIsConnected(true);
         setConnectError(null);
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, result.address);
+          localStorage.setItem(STORAGE_KEY, address);
+          localStorage.setItem("walletConnected", "true");
         }
+      } else {
+        throw new Error("Failed to get address.");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to connect.";
       setConnectError(message);
     } finally {
@@ -97,13 +88,39 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     setIsConnected(false);
     setConnectError(null);
-    if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("walletConnected");
+    }
   }, []);
 
   const signTx = useCallback(async (xdr: string): Promise<string> => {
     void xdr;
     return "";
   }, []);
+
+  // Auto-connect effect
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const isStoredConnected = typeof window !== "undefined" ? localStorage.getItem("walletConnected") === "true" : false;
+    if (!isStoredConnected) return;
+
+    // Check if installed before trying to auto-connect
+    walletService.isInstalled().then((installed) => {
+      if (installed) {
+         walletService.getAddress().then((address) => {
+            if (address) {
+              setPublicKey(address);
+              setIsConnected(true);
+            } else {
+               // If we can't get address despite stored connection, clear storage
+               disconnect();
+            }
+         }).catch(() => disconnect());
+      }
+    });
+  }, [mounted, disconnect]);
 
   const value: WalletState = {
     publicKey,
@@ -118,16 +135,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   );
-}
-
-export function useWallet() {
-  const context = useContext(WalletContext);
-  if (context === undefined) {
-    throw new Error("useWallet must be used within a WalletProvider");
-  }
-  return context;
 }
