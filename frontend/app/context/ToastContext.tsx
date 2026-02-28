@@ -2,51 +2,86 @@
 
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
-type ToastVariant = 'error' | 'success' | 'info' | 'warning';
+export type ToastType = 'info' | 'success' | 'error' | 'warning';
 
-interface Toast {
-  id: number;
+export interface Toast {
+  id: string;
   message: string;
-  variant: ToastVariant;
+  type: ToastType;
 }
 
 interface ToastContextType {
-  showToast: (message: string, variant?: ToastVariant) => void;
+  toasts: Toast[];
+  addToast: (message: string, type?: ToastType) => void;
+  removeToast: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType>({ showToast: () => {} });
+const ToastContext = createContext<ToastContextType>({
+  toasts: [],
+  addToast: () => {},
+  removeToast: () => {},
+});
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, variant: ToastVariant = 'info') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, variant }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const variantStyles: Record<ToastVariant, string> = {
-    error: 'bg-red-600',
-    success: 'bg-green-600',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-600',
-  };
+  const addToast = useCallback(
+    (message: string, type: ToastType = 'info') => {
+      const id = `${Date.now()}-${Math.random()}`;
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => removeToast(id), 5000);
+    },
+    [removeToast]
+  );
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={`${variantStyles[t.variant]} text-white text-sm px-4 py-3 rounded-lg shadow-lg max-w-sm`}
-          >
-            {t.message}
-          </div>
-        ))}
-      </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
   );
 }
 
-export const useToast = () => useContext(ToastContext);
+export function useToast() {
+  return useContext(ToastContext);
+}
+
+const TYPE_STYLES: Record<ToastType, string> = {
+  info: 'bg-primary text-white',
+  success: 'bg-green-600 text-white',
+  error: 'bg-red-600 text-white',
+  warning: 'bg-yellow-500 text-black',
+};
+
+function ToastContainer({
+  toasts,
+  onRemove,
+}: {
+  toasts: Toast[];
+  onRemove: (id: string) => void;
+}) {
+  if (!toasts.length) return null;
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 min-w-[260px]">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`flex items-center justify-between rounded-lg px-4 py-3 shadow-lg text-sm font-medium ${TYPE_STYLES[t.type]}`}
+        >
+          <span>{t.message}</span>
+          <button
+            onClick={() => onRemove(t.id)}
+            className="ml-4 opacity-70 hover:opacity-100 transition-opacity"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
