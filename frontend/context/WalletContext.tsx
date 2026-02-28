@@ -49,18 +49,47 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    const saved =
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (!saved) return;
-    walletService.getAddress().then((address) => {
-      if (address && address === saved) {
-        setPublicKey(saved);
-        setIsConnected(true);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
+    let cancelled = false;
+
+    async function autoConnect() {
+      const isStoredConnected = typeof window !== "undefined" ? localStorage.getItem("walletConnected") === "true" : false;
+      if (!isStoredConnected) return;
+
+      setIsConnecting(true);
+
+      try {
+        const installed = await walletService.isInstalled();
+        if (!installed) {
+          if (!cancelled) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+          return;
+        }
+
+        const address = await walletService.getAddress();
+        if (!cancelled) {
+          if (address) {
+            setPublicKey(address);
+            setIsConnected(true);
+            localStorage.setItem(STORAGE_KEY, address);
+            localStorage.setItem("walletConnected", "true");
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("walletConnected");
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem("walletConnected");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConnecting(false);
+        }
       }
-    });
-  }, [mounted]);
+    }
 
   const clearError = useCallback(() => setConnectError(null), []);
 
@@ -82,7 +111,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setIsConnected(true);
         setConnectError(null);
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, address);
+          localStorage.setItem(STORAGE_KEY, result.address);
+          localStorage.setItem("walletConnected", "true");
         }
       }
     } catch (err: unknown) {
@@ -97,7 +127,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     setIsConnected(false);
     setConnectError(null);
-    if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("walletConnected");
+    }
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
