@@ -3,32 +3,15 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useToast } from "@/context/ToastContext";
 import { authService } from "@/services/auth";
 
-const registerSchema = z
-  .object({
-    fullName: z.string().min(2, "Full name must be at least 2 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number")
-      .regex(
-        /[^A-Za-z0-9]/,
-        "Password must contain at least one special character"
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+interface RegisterFormValues {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 function getPasswordStrength(password: string) {
   let score = 0;
@@ -59,7 +42,6 @@ export default function RegisterPage() {
     watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
     mode: "onBlur",
   });
 
@@ -125,7 +107,13 @@ export default function RegisterPage() {
               autoComplete="name"
               placeholder="John Doe"
               className={errors.fullName ? inputError : inputNormal}
-              {...register("fullName")}
+              {...register("fullName", {
+                required: "Full name is required",
+                minLength: {
+                  value: 2,
+                  message: "Full name must be at least 2 characters",
+                },
+              })}
             />
             {errors.fullName && (
               <p className="text-red-500 text-xs mt-1">
@@ -148,7 +136,13 @@ export default function RegisterPage() {
               autoComplete="email"
               placeholder="you@example.com"
               className={errors.email ? inputError : inputNormal}
-              {...register("email")}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Please enter a valid email address",
+                },
+              })}
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">
@@ -172,7 +166,24 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 placeholder="••••••••"
                 className={`${errors.password ? inputError : inputNormal} pr-14`}
-                {...register("password")}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                  validate: {
+                    hasUppercase: (v) =>
+                      /[A-Z]/.test(v) ||
+                      "Password must contain at least one uppercase letter",
+                    hasNumber: (v) =>
+                      /[0-9]/.test(v) ||
+                      "Password must contain at least one number",
+                    hasSpecial: (v) =>
+                      /[^A-Za-z0-9]/.test(v) ||
+                      "Password must contain at least one special character",
+                  },
+                })}
               />
               <button
                 type="button"
@@ -227,7 +238,11 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 placeholder="••••••••"
                 className={`${errors.confirmPassword ? inputError : inputNormal} pr-14`}
-                {...register("confirmPassword")}
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  validate: (v) =>
+                    v === passwordValue || "Passwords do not match",
+                })}
               />
               <button
                 type="button"
