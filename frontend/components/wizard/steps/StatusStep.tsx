@@ -62,6 +62,8 @@ interface Particle {
   color: string;
   size: number;
   duration: number;
+  finalX: number;
+  borderRadius: string;
 }
 
 const CONFETTI_COLORS = [
@@ -74,15 +76,20 @@ const CONFETTI_COLORS = [
 ];
 
 function generateParticles(count = 40): Particle[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: 40 + Math.random() * 20, // near center-top
-    y: 0,
-    angle: Math.random() * 360,
-    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-    size: 6 + Math.random() * 6,
-    duration: 1.2 + Math.random() * 0.8,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const x = 40 + Math.random() * 20;
+    return {
+      id: i,
+      x,
+      y: 0,
+      angle: Math.random() * 360,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      size: 6 + Math.random() * 6,
+      duration: 1.2 + Math.random() * 0.8,
+      finalX: x + (Math.random() - 0.5) * 30,
+      borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+    };
+  });
 }
 
 function Confetti() {
@@ -99,7 +106,7 @@ function Confetti() {
           initial={{ x: `${p.x}vw`, y: -10, opacity: 1, rotate: 0 }}
           animate={{
             y: "100vh",
-            x: `${p.x + (Math.random() - 0.5) * 30}vw`,
+            x: `${p.finalX}vw`,
             opacity: [1, 1, 0],
             rotate: p.angle,
           }}
@@ -108,7 +115,7 @@ function Confetti() {
             position: "absolute",
             width: p.size,
             height: p.size,
-            borderRadius: Math.random() > 0.5 ? "50%" : 2,
+            borderRadius: p.borderRadius,
             backgroundColor: p.color,
           }}
         />
