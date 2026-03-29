@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/health.routes';
+import developerRoutes from './routes/developer.routes';
+import { startVerificationTimeoutJob } from './jobs/verificationTimeout.job';
 
 // Load environment variables
 dotenv.config();
@@ -17,8 +19,12 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+// Start cron jobs
+startVerificationTimeoutJob();
+
 // Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/v1/developer', developerRoutes);
 
 // Base route
 app.get('/', (req: Request, res: Response) => {
