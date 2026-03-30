@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/health.routes';
+import mongoose from 'mongoose';
+import { initCloudinary } from './config/cloudinary';
+import { startCleanupJob } from './jobs/cleanup.job';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +27,12 @@ app.use('/api/health', healthRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.send('StellarProof Backend API is running');
 });
+
+initCloudinary();
+// Start the cron job. It will fire on the CLEANUP_CRON_SCHEDULE interval.
+startCleanupJob();
+
+
 
 // Start the server
 app.listen(PORT, () => {
