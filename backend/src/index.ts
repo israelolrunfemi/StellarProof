@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/health.routes';
+import kmsRoutes from './routes/kms.routes';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +20,7 @@ connectDB();
 
 // Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/v1/kms', kmsRoutes);
 
 // Base route
 app.get('/', (req: Request, res: Response) => {
