@@ -89,7 +89,7 @@ export const DebugPanel: React.FC = () => {
   const filteredLogs = filter === 'all' ? logs : logs.filter(log => log.category === filter);
 
   return (
-    <div className="fixed bottom-4 right-4 w-[600px] h-[500px] bg-gray-950 text-gray-200 border border-gray-800 rounded-lg shadow-2xl z-50 flex flex-col font-mono text-sm overflow-hidden">
+    <div className="fixed bottom-4 right-4 w-150 h-125 bg-gray-950 text-gray-200 border border-gray-800 rounded-lg shadow-2xl z-50 flex flex-col font-mono text-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between bg-gray-900 p-2 border-b border-gray-800">
         <div className="flex flex-col">
