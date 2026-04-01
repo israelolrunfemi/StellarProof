@@ -51,10 +51,8 @@ export class SPVController {
     try {
       const record = await spvService.getSPVRecord(req.params.id);
       // Strip the encrypted payload from the read response for safety.
-      const { encryptedPayload: _, ...publicFields } = record as Record<
-        string,
-        unknown
-      >;
+      const { encryptedPayload: _, ...publicFields } =
+        record as unknown as Record<string, unknown>;
       void _;
       res.status(StatusCodes.OK).json({
         success: true,
