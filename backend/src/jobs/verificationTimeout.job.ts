@@ -1,5 +1,5 @@
-import cron from 'node-cron';
-import VerificationJob from '../models/VerificationJob.model';
+import cron from "node-cron";
+import { VerificationJobModel } from "../models/verificationJob.model";
 
 export const startVerificationTimeoutJob = () => {
   // Run every minute
@@ -7,7 +7,7 @@ export const startVerificationTimeoutJob = () => {
     try {
       const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
-      const result = await VerificationJob.updateMany(
+      const result = await VerificationJobModel.updateMany(
         {
           status: { $in: ['processing', 'minting'] },
           updatedAt: { $lt: tenMinutesAgo }

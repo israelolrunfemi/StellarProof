@@ -13,7 +13,7 @@
  */
 import mongoose from "mongoose";
 import {
-  SorobanRpc,
+  rpc as SorobanRpc,
   Contract,
   Address,
   TransactionBuilder,
