@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(find /c/Users/OWNER/Desktop/StellarProof -name *.env*)"
-    ]
-  }
-}
