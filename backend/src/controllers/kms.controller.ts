@@ -1,128 +1,104 @@
 import type { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
+import { StatusCodes } from "http-status-codes";
 
-import KMSKey from "../models/KMSKey.model";
-import { kmsService } from "../services/kms.service";
+import * as kmsService from "../services/kms.service";
 
-export class KMSController {
-  async createKey(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const userId = (req as any).user?.id as string | undefined;
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        res.status(401).json({
-          success: false,
-          error: "Unauthorized",
-        });
-        return;
-      }
+export async function rotateKey(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId =
+      ((req as any).user?.id as string | undefined) ??
+      (req.body?.userId as string | undefined);
 
-      const key = await kmsService.generateKey({ creatorId: userId });
-
-      res.status(201).json({
-        success: true,
-        data: {
-          keyId: key._id,
-          keyVersion: key.keyVersion,
-          algorithm: key.algorithm,
-          isActive: key.isActive,
-          createdAt: key.createdAt,
-        },
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: "fail",
+        message: "Invalid userId",
       });
-    } catch (error) {
-      next(error);
+      return;
     }
-  }
 
-  async getKey(req: Request, res: Response): Promise<void> {
-    void req;
-    res.status(501).json({
-      success: false,
-      error: "Not implemented",
+    const result = await kmsService.rotateKey(userId);
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: result,
     });
-  }
-
-  async listKeys(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const userId = (req as any).user?.id as string | undefined;
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        res.status(401).json({
-          success: false,
-          error: "Unauthorized",
-        });
-        return;
-      }
-
-      const keys = await KMSKey.find({ creatorId: userId })
-        .select("_id keyVersion algorithm isActive createdAt updatedAt expiresAt")
-        .sort({ createdAt: -1 })
-        .lean();
-
-      res.status(200).json({
-        success: true,
-        data: keys,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deleteKey(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { keyId } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(keyId)) {
-        res.status(400).json({ success: false, error: "Invalid keyId" });
-        return;
-      }
-
-      await KMSKey.deleteOne({ _id: keyId }).exec();
-      res.status(200).json({ success: true });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deactivateKey(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { keyId } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(keyId)) {
-        res.status(400).json({ success: false, error: "Invalid keyId" });
-        return;
-      }
-
-      await KMSKey.updateOne({ _id: keyId }, { $set: { isActive: false } }).exec();
-      res.status(200).json({ success: true });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async rotateKey(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const userId = (req as any).user?.id as string | undefined;
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        res.status(401).json({
-          success: false,
-          error: "Unauthorized",
-        });
-        return;
-      }
-
-      const key = await kmsService.generateKey({ creatorId: userId, keyVersion: "v2" });
-
-      res.status(200).json({
-        success: true,
-        data: {
-          keyId: key._id,
-          keyVersion: key.keyVersion,
-          algorithm: key.algorithm,
-          isActive: key.isActive,
-          createdAt: key.createdAt,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 }
 
-export const kmsController = new KMSController();
+export async function getUserKeys(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: "fail",
+        message: "Invalid userId",
+      });
+      return;
+    }
+
+    const keys = await kmsService.getAllKeys(userId);
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: keys,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getActiveKey(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: "fail",
+        message: "Invalid userId",
+      });
+      return;
+    }
+
+    const key = await kmsService.getActiveKey(userId);
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: key,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function revokeKey(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const keyId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(keyId)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: "fail",
+        message: "Invalid key id",
+      });
+      return;
+    }
+
+    const key = await kmsService.revokeKey(keyId);
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: key,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
