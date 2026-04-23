@@ -44,7 +44,7 @@ const AssetSchema: Schema = new Schema(
     },
     storageProvider: {
       type: String,
-      enum: ['mongodb', 'ipfs', 's3', 'cloudinary'], // ✅ includes cloudinary
+      enum: ['mongodb', 'ipfs', 's3', 'cloudinary'], 
       required: true,
       default: 'mongodb',
     },

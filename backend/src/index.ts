@@ -43,6 +43,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }, 10_000).unref();
   };
+
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
   process.on("SIGINT", () => void shutdown("SIGINT"));
 }
