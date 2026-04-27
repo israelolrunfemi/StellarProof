@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/health.routes';
+import storageRoutes from './routes/v1/storage.routes';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 
 // Load environment variables
@@ -20,6 +21,7 @@ connectDB();
 
 // Routes
 app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/storage', storageRoutes);
 
 // Base route
 app.get('/', (_req: Request, res: Response) => {
